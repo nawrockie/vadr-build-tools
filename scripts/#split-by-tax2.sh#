@@ -1,0 +1,12 @@
+# tt2: level 7 (mammalia, etc.) 
+perl split-by-tax.pl cox1.6170.tt2.info.txt 7 vertebrata-
+# tt4: level 3 (cnidaria, ctenophora, placozoa, porifera
+perl split-by-tax.pl cox1.6170.tt4.info.txt 3 NONE
+# tt5: level 4 (arthropoda, etc.)
+perl split-by-tax.pl cox1.6170.tt5.info.txt 4 NONE
+# tt9: level 3 (platy, hemichordate, echinodermata)
+perl split-by-tax.pl cox1.6170.tt9.info.txt 3 NONE
+# tt13: level 4 (tunicata ONLY)
+perl split-by-tax.pl cox1.6170.tt13.info.txt 4 NONE
+# tt24: level 3 (hemichordata ONLY)
+perl split-by-tax.pl cox1.6170.tt24.info.txt 3 NONE

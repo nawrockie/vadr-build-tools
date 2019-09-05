@@ -1,0 +1,3 @@
+for tt in 2 4 5 9 13 24; do 
+    cat cox1.6170.tt$tt.info.txt | awk '{ print $1 }' | sed 's/accver://' | sort | uniq | esl-sfetch -f cox1.short.fa - > cox1.6170.tt$tt.aa.fa
+done
