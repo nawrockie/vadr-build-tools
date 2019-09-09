@@ -12,7 +12,7 @@ if(scalar(@ARGV) != 1) { die $usage; }
 
 my $info_file = ($ARGV[0]);
 
-my $chunksize = 50;
+my $chunksize = 10;
 #my $chunksize = 10000;
 my $nattempts = 3;
 my @source_A = ();
@@ -102,59 +102,81 @@ sub fetch_chunk {
   my $nseconds = 5;
 
   my $genbank_url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=$db&retmode=xml&id=" . $name_str;
-  my $xml_string = get($genbank_url);
 
-  if(! defined $xml_string) { 
-    # if NCBI is being hit by a bunch of requests, the get() command
-    # may fail in that $got_url may be undefined. If that happens we
+  my $xml = undef;
+  my $xml_string = get($genbank_url);
+  my $xml_valid = 0;
+  if(defined $xml_string) { 
+      # to save memory, remove sequence info from the xml_string since we don't need it
+      # remove <GBSeq_sequence> lines
+      $xml_string =~ s/[^\n]+\<GBSeq\_sequence\>\w+\<\/GBSeq\_sequence\>\n//g;
+      # remove <GBQualifier>\n<GBQualifer_name>translation\nGBQualifier_value\n<\GBQualifier> sets of 4 lines
+      $xml_string =~ s/[^\n]+\<GBQualifier\>\n[^\n]+\<GBQualifier\_name\>translation\<\/GBQualifier\_name\>\n[^\n]+\<GBQualifier\_value\>\w+\<\/GBQualifier\_value\>\n[^\n]+\<\/GBQualifier\>\n//g;
+      $xml = eval { XML::LibXML->load_xml(string => $xml_string); };
+      if($@) { $xml_valid = 0; }
+      else   { $xml_valid = 1; }
+  }
+  if(! $xml_valid) { 
+   # the get() command either failed (returned undef) or
+    # returned an invalid xml string, either way we
     # wait a few seconds ($nseconds) and try again (up to
-    # $nattempts) times.
+    # $nattempts) times BUT we only do this if the ID doesn't look 
+    # like a RNAcentral ids. If it does, we do not do more attempts.
     my $attempt_ctr = 1;
-    while((! defined $xml_string) && ($attempt_ctr < $nattempts)) { 
+    while((! $xml_valid) && ($attempt_ctr < $nattempts)) { 
       sleep($nseconds);
+      # printf("Retrying to fetch for $name\n");
       $xml_string = get($genbank_url);
+      if(defined $xml_string) { 
+        # to save memory, remove sequence info from the xml_string since we don't need it
+        # remove <GBSeq_sequence> lines
+        $xml_string =~ s/[^\n]+\<GBSeq\_sequence\>\w+\<\/GBSeq\_sequence\>\n//g;
+        # remove <GBQualifier>\n<GBQualifer_name>translation\nGBQualifier_value\n<\GBQualifier> sets of 4 lines
+        $xml_string =~ s/[^\n]+\<GBQualifier\>\n[^\n]+\<GBQualifier\_name\>translation\<\/GBQualifier\_name\>\n[^\n]+\<GBQualifier\_value\>\w+\<\/GBQualifier\_value\>\n[^\n]+\<\/GBQualifier\>\n//g;
+        $xml = eval { XML::LibXML->load_xml(string => $xml_string); };
+        if($@) { $xml_valid = 0; }
+        else   { $xml_valid = 1; }
+      }
       $attempt_ctr++;
     }
-    if(($attempt_ctr >= $nattempts) && (! defined $xml_string)) { 
+    if(($attempt_ctr >= $nattempts) && (! $xml_valid)) { 
       die "ERROR trying to fetch sequence data from genbank, reached maximum allowed number of attempts ($attempt_ctr)"; 
     }
   }
-  
-  #printf("$xml_string\n");
-  #exit 0;
-
-  my $xml = XML::LibXML->load_xml(string => $xml_string);
-
-  foreach my $gbseq ($xml->findnodes('//GBSeq')) { 
-    my $accver = $gbseq->findvalue('./GBSeq_accession-version');
-    if(! defined $coded_by_HAR->{$accver}) { die "ERROR no coded_by for $accver"; }
-    # printf("$accver $coded_by\n");
-    my $found_location = 0;
-
-    foreach my $coded_by (@{$coded_by_HAR->{$accver}}) { 
-      my $codon_start_key = $accver . ":::" . $coded_by; 
-      foreach my $feature ($gbseq->findnodes('//GBFeature')) { 
-        my $feature_key = $feature->findvalue('./GBFeature_key');
-        if($feature_key eq "CDS") { 
-          my $location    = $feature->findvalue('./GBFeature_location');
-          if($location eq $coded_by) { 
-            $found_location = 1;
-            my $codon_start = $feature->findvalue('./GBFeature_quals/GBQualifier/GBQualifier_name[text()="codon_start"]/following-sibling::GBQualifier_value');
-            #if(defined $codon_start) { printf("DEFINED $accver $location $codon_start\n"); }
-            if(! defined $codon_start) { 
-              #printf("UNDEFINED $accver $location\n");
-              $codon_start = 1; 
+  else { 
+    # if we get here: we know that $xml_string is defined and valid
+    # and $xml is ready for parsing  }
+    foreach my $gbseq ($xml->findnodes('//GBSeq')) { 
+      my $accver = $gbseq->findvalue('./GBSeq_accession-version');
+      #printf("parsing $accver\n");
+      if(! defined $coded_by_HAR->{$accver}) { die "ERROR no coded_by for $accver"; }
+      my $found_location = 0;
+      
+      foreach my $coded_by (@{$coded_by_HAR->{$accver}}) { 
+        my $codon_start_key = $accver . ":::" . $coded_by; 
+        foreach my $feature ($gbseq->findnodes('//GBFeature')) { 
+          my $feature_key = $feature->findvalue('./GBFeature_key');
+          if($feature_key eq "CDS") { 
+            my $location    = $feature->findvalue('./GBFeature_location');
+            if($location eq $coded_by) { 
+              $found_location = 1;
+              my $codon_start = $feature->findvalue('./GBFeature_quals/GBQualifier/GBQualifier_name[text()="codon_start"]/following-sibling::GBQualifier_value');
+              #if(defined $codon_start) { printf("DEFINED $accver $location $codon_start\n"); }
+              if(! defined $codon_start) { 
+                #printf("UNDEFINED $accver $location\n");
+                $codon_start = 1; 
+              }
+              $codon_start_H{$codon_start_key} = $codon_start;
             }
-            $codon_start_H{$codon_start_key} = $codon_start;
           }
         }
-      }
-      if(! $found_location) { 
-        printf STDERR "ERROR did not find CDS feature in $accver with location $coded_by\n"; 
-        $codon_start_H{$codon_start_key} = "?";
+        if(! $found_location) { 
+          printf STDERR "ERROR did not find CDS feature in $accver with location $coded_by\n"; 
+          $codon_start_H{$codon_start_key} = "?";
+        }
       }
     }
-  }
+  } # end of 'else' entered if $xml_string is defined
 
   return;
 }

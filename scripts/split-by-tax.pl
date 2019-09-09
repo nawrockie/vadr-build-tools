@@ -10,8 +10,7 @@ while($line = <IN>) {
   if($taxline =~ /taxonomy:(\S+)/) { 
     $tax = $1;
     @tax_A = split(";", $tax);
-    if(scalar(@tax_A) < $tax_level) { die "ERROR user specified tax level $tax_level but only " . scalar(@tax_A) . " tax tokens exist on line:\n$line\n"; }
-    my $taxkey = $tax_A[($tax_level-1)];
+    my $taxkey = (scalar(@tax_A) < $tax_level) ?  $taxkey = $tax_A[(scalar(@tax_A)-1)] : $tax_A[($tax_level-1)];
     if(! defined $bytax_HA{$taxkey}) { 
       @{$bytax_HA{$taxkey}} = (); 
     }

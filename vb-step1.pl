@@ -5,7 +5,7 @@ my $usage = "perl vb-step1.pl <protein fasta file> <tax-split file> <output root
 if(scalar(@ARGV) != 3) { die $usage; }
 
 my ($fa_file, $taxsplit_file, $root) = (@ARGV);
-my $scripts_dir = "./scripts";
+my $scripts_dir = "/panfs/pan1/infernal/notebook/19_0905_vadr_cytb_initial/vadr-build-tools/scripts";
 my $easel_dir = "/usr/local/infernal/1.1.2/bin";
 
 my $cmd;
