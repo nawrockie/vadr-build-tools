@@ -1,7 +1,7 @@
 #!/usr/bin/env perl
 use strict;
 
-my $usage = "perl vb-step3.pl <model list> <name of vadr model dir to create> <gene value (use _ for space)> <product value (use _ for space)>\n";
+my $usage = "perl vb-step4-create-vadr-files.pl <model list> <name of vadr model dir to create> <gene value (use _ for space)> <product value (use _ for space)>\n";
 if(scalar(@ARGV) != 4) { die $usage; }
 
 my ($model_root_file, $vadr_model_dir, $gene, $product) = (@ARGV);
@@ -50,14 +50,24 @@ while($line = <IN>) {
   chomp $line;
   $line =~ s/^$root\.//;
   push(@mdl_A, $line);
-  push(@mdl_info_file_A, $root . "." . $line . ".info");
+  my $mdl_info_file = $root . "." . $line . ".info";
+  push(@mdl_info_file_A, $mdl_info_file);
+
+  # make sure all the files we require exist and are non-empty
+  my $cm_name = $root . "." . $mdl;
+  my $cm_file_name = $cm_name . ".1p0" . ".vadr.cm";
+  my $mdl_aa_fa_file = $root . "." . $mdl . ".aa.fa"; 
+
+  my @reqd_files_A = ($mdl_info_file, $cm_file_name, $mdl_aa_file);
+  foreach my $reqd_file (@reqd_files_A) { 
+    if(! -e $reqd_file) { die "ERROR required file $reqd_file does not exist. Did you (succesfully) run vb-step2-taxinfo2muscle-qsub.pl?"; }
+    if(! -s $reqd_file) { die "ERROR required file $reqd_file exists but is empty. Did you (succesfully) run vb-step2-taxinfo2muscle-qsub.pl?"; }
+  }
 }
 
 # for each model: 
 my $nmdl = scalar(@mdl_A);
 my $m;
-my @mdl_aa_fa_file_A = ();
-my @mdl_aa_aln_file_A = ();
 
 my $vadr_minfo_file = "vadr." . $root . ".minfo";
 open(MINFO, ">", $vadr_minfo_file) || die "ERROR unable to open $vadr_minfo_file for writing";
@@ -75,9 +85,6 @@ for($m = 0; $m < $nmdl; $m++) {
   }
   my $mdl_info_file = $mdl_info_file_A[$m];
   my $mdl_aa_fa_file = $root . "." . $mdl . ".aa.fa"; 
-  my $mdl_aa_aln_file = $root . "." . $mdl . ".aa.afa"; 
-  push(@mdl_aa_fa_file_A, $mdl_aa_fa_file);
-  push(@mdl_aa_aln_file_A, $mdl_aa_aln_file);
 
   my $cm_name = $root . "." . $mdl;
   my $cm_file_name = $cm_name . ".1p0" . ".vadr.cm";

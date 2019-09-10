@@ -1,7 +1,7 @@
 #!/usr/bin/env perl
 use strict;
 
-my $usage = "perl vb-step1.pl <protein fasta file> <tax-split file> <output root>\n";
+my $usage = "perl vb-step2-taxinfo2muscle-qsub.pl <protein fasta file> <tax-split file> <output root>\n";
 if(scalar(@ARGV) != 3) { die $usage; }
 
 my ($fa_file, $taxsplit_file, $root) = (@ARGV);
@@ -23,6 +23,16 @@ if(! (-d $ENV{"VADREASELDIR"})) {
 
 my $scripts_dir = $ENV{"VADRBUILDTOOLSDIR"} . "/scripts";
 my $easel_dir = $ENV{"VADREASELDIR"};
+
+# make sure you have the required files created as output by earlier vb-step*pl scripts
+my $short_fa_file = $root . ".aa.short.fa";
+my $info3_file    = $root . ".info3.txt";
+my $tt_file       = $root . ".tt.list";
+my @reqd_files_A  = ($short_fa_file, $short_fa_file.".ssi", $info3_file, $tt_file);
+foreach my $reqd_file (@reqd_files_A) { 
+  if(! -e $reqd_file) { die "ERROR required file $reqd_file does not exist. Did you (succesfully) run vb-step1-fasta2taxinfo.pl?"; }
+  if(! -s $reqd_file) { die "ERROR required file $reqd_file exists but is empty. Did you (succesfully) run vb-step1-fasta2taxinfo.pl?"; }
+}
 
 #########################################################
 # parse the taxsplit file
@@ -47,50 +57,7 @@ close(IN);
 #####################################################
 
 #########################################################
-# convert the seqs in the fasta file to short names (acc.version)
-my $short_fa_file = $root . ".aa.short.fa";
-$cmd = "perl $scripts_dir/fasta-ncbi-idfetch-name-long-to-short.pl $fa_file > $short_fa_file";
-RunCommand($cmd, 1);
-#########################################################
-
-#########################################################
-# index the short fa file
-$cmd = "$easel_dir/esl-sfetch --index $short_fa_file > /dev/null";
-RunCommand($cmd, 1);
-#########################################################
-
-#########################################################
-# make list of seqs (short names)
-my $short_name_file = $root . ".aa.short.list";
-$cmd = "$easel_dir/esl-seqstat -a $short_fa_file | grep ^\= | awk '{ print \$2 }' > $short_name_file";
-RunCommand($cmd, 1);
 # determine count of seqs
-my $nseq = `wc -l $short_name_file`;
-chomp $nseq;
-#########################################################
-
-#########################################################
-# get info on the protein seqs by looking them up with eutils
-my $info_file = $root . ".info";
-$cmd = "perl $scripts_dir/lookup-prot-acc.pl $short_name_file > $info_file";
-RunCommand($cmd, 1);
-#########################################################
-
-#########################################################
-# HOPEFULLY TEMPORARY
-# remove any sequence with a join 
-my $info2_file = $root . ".info2.txt";
-$cmd = "grep -v join $info_file > $info2_file";
-RunCommand($cmd, 1);
-my $nseq2 = `wc -l $info2_file`;
-chomp $nseq2;
-#########################################################
-
-#########################################################
-# fetch info on codon_start using edirect for nucleotide accessions
-my $info3_file = $root . ".info3.txt";
-$cmd = "perl $scripts_dir/lookup-nt-acc.pl $info2_file > $info3_file";
-RunCommand($cmd, 1);
 my $nseq3 = `wc -l $info3_file`;
 chomp $nseq3;
 #########################################################
@@ -98,9 +65,6 @@ chomp $nseq3;
 #########################################################
 # split files up by translation_table value, all seqs for each model in VADR
 # must currently use the same genetic code (translation_table).
-my $tt_file = $root . ".tt.list";
-$cmd = "perl $scripts_dir/sort-by-tt.pl $info3_file $root | grep -v ^\# > $tt_file";
-RunCommand($cmd, 1);
 # get translation table values:
 my @tt_A;
 open(IN, $tt_file) || die "ERROR unable to open $tt_file for reading";

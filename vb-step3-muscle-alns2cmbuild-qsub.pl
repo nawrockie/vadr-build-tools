@@ -1,7 +1,7 @@
 #!/usr/bin/env perl
 use strict;
 
-my $usage = "perl vb-step3-muscle-aln2cmbuild-qsub.pl <model list>\n";
+my $usage = "perl vb-step3-muscle-alns2cmbuild-qsub.pl <model list>\n";
 if(scalar(@ARGV) != 1) { die $usage; }
 
 my ($model_root_file) = (@ARGV);
@@ -28,46 +28,47 @@ my $scripts_dir = $ENV{"VADRBUILDTOOLSDIR"} . "/scripts";
 my $easel_dir = $ENV{"VADREASELDIR"};
 
 my $cmd;
-my $line;
 
 # parse the model_root file
 my @mdl_A = ();
-my @mdl_info_file_A = ();
 open(IN, $model_root_file) || die "ERROR unable to open $model_root_file for reading";
-while($line = <IN>) { 
+while(my $line = <IN>) { 
   chomp $line;
   $line =~ s/^$root\.//;
   push(@mdl_A, $line);
-  push(@mdl_info_file_A, $root . "." . $line . ".info");
-}
 
-# for each model: 
-my $nmdl = scalar(@mdl_A);
-my $m;
-my @mdl_aa_fa_file_A = ();
-my @mdl_aa_aln_file_A = ();
+  my @reqd_files_A = ();
+  my $info_file         = $root . "." . $mdl . ".info";
+  my $aa_fa_file        = $root . "." . $mdl . ".aa.fa"; 
+  my $aa_aln_file       = $root . "." . $mdl . ".aa.afa"; 
+  my @reqd_files_A = ($info_file, $aa_fa_file, $aa_aln_file);
+  foreach my $reqd_file (@reqd_files_A) { 
+    if(! -e $reqd_file) { die "ERROR required file $reqd_file does not exist. Did you (succesfully) run vb-step2-taxinfo2muscle-qsub.pl?"; }
+    if(! -s $reqd_file) { die "ERROR required file $reqd_file exists but is empty. Did you (succesfully) run vb-step2-taxinfo2muscle-qsub.pl?"; }
+  }
+}
 
 my $cmbuild_qsub_file = $root . ".cmbuild.qsub";
 open(CMBUILD, ">", $cmbuild_qsub_file) || die "ERROR unable to open $cmbuild_qsub_file for writing";
 
-for($m = 0; $m < $nmdl; $m++) { 
+# for each model: 
+my $nmdl = scalar(@mdl_A);
+for(my $m = 0; $m < $nmdl; $m++) { 
   my $mdl = $mdl_A[$m];
-  my $mdl_info_file = $mdl_info_file_A[$m];
-  my $mdl_aa_fa_file = $root . "." . $mdl . ".aa.fa"; 
-  my $mdl_aa_aln_file = $root . "." . $mdl . ".aa.afa"; 
-  push(@mdl_aa_fa_file_A, $mdl_aa_fa_file);
-  push(@mdl_aa_aln_file_A, $mdl_aa_aln_file);
 
-  my $source_list = $root . "." . $mdl . ".source.list";
-  my $info_file   = $root . "." . $mdl . ".info";
+  # required input files (we checked that these existed above when we created @mdl_A)
+  my $info_file         = $root . "." . $mdl . ".info";
+  my $aa_fa_file        = $root . "." . $mdl . ".aa.fa"; 
+  my $aa_aln_file       = $root . "." . $mdl . ".aa.afa"; 
+
+  # output files that we'll create
+  my $source_list       = $root . "." . $mdl . ".source.list";
   my $source_nt_fa_file = $root . "." . $mdl . ".source.nt.fa";
-  my $nt_fa_file = $root . "." . $mdl . ".nt.fa";
-  my $nt_aln_file = $root . "." . $mdl . ".nt.afa";
-  my $nt_stk_file = $root . "." . $mdl . ".nt.stk";
-  my $aa_fa_file = $root . "." . $mdl . ".aa.fa"; 
-  my $aa_aln_file = $root . "." . $mdl . ".aa.afa"; 
-  my $map_file = $root . "." . $mdl . ".map";
-  my $alistat_file = $root . "." . $mdl . ".alistat";
+  my $nt_fa_file        = $root . "." . $mdl . ".nt.fa";
+  my $map_file          = $root . "." . $mdl . ".map";
+  my $nt_aln_file       = $root . "." . $mdl . ".nt.afa";
+  my $nt_stk_file       = $root . "." . $mdl . ".nt.stk";
+  my $alistat_file      = $root . "." . $mdl . ".alistat";
 
   # create list of 'source' nt accessions
   $cmd = "perl $scripts_dir/parse-by-source.pl $info_file | sort | uniq > $source_list";
@@ -118,8 +119,6 @@ for($m = 0; $m < $nmdl; $m++) {
 close(CMBUILD);
 printf("\nScript to submit $nmdl cmbuild jobs to the farm is in:\n$cmbuild_qsub_file\n");
 printf("\nRun that script, wait for all jobs to finish, then run vb-step3.pl\n");
-
-
 
 #################################################################
 # Subroutine: RunCommand()

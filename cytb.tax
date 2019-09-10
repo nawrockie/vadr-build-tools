@@ -1,0 +1,25 @@
+# translation_table taxonomy_level prefix
+# tt2: level 7 (mammalia, etc.) 
+2 7 vertebrata-
+# tt5: level 3 (porifera, etc.)
+5 3 NONE
+# tt4: level 3 (cnidaria, ctenophora, placozoa, porifera...
+4 3 NONE
+# tt9: level 3 (platy, hemichordate, echinodermata)
+9 3 NONE
+# tt1: level 2 (Amoebozoa, Viridplantae)
+1 2 NONE
+# tt13: level 4 (tunicata ONLY)
+13 4 NONE
+# tt3: level 3 (dikarya ONLY)
+3 3 NONE
+# tt22: level 2 (viridiplantae)
+22 2 NONE
+# tt11: level 2 (jakobida, nucleariideaandFonticulagroup)
+11 2 NONE
+# tt14: level 3 (platyhelminthes ONLY)
+14 3 NONE
+# tt33: level 3 (hemichordate ONLY)
+33 3 NONE
+# tt24: level 3 (hemichordate ONLY)
+24 3 NONE
