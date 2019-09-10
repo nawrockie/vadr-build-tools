@@ -34,8 +34,9 @@ my @mdl_A = ();
 open(IN, $model_root_file) || die "ERROR unable to open $model_root_file for reading";
 while(my $line = <IN>) { 
   chomp $line;
-  $line =~ s/^$root\.//;
-  push(@mdl_A, $line);
+  my $mdl = $line;
+  $mdl =~ s/^$root\.//;
+  push(@mdl_A, $mdl);
 
   my @reqd_files_A = ();
   my $info_file         = $root . "." . $mdl . ".info";
@@ -118,7 +119,9 @@ for(my $m = 0; $m < $nmdl; $m++) {
 }
 close(CMBUILD);
 printf("\nScript to submit $nmdl cmbuild jobs to the farm is in:\n$cmbuild_qsub_file\n");
-printf("\nRun that script, wait for all jobs to finish, then run vb-step3.pl\n");
+printf("\nRun that script, wait for all jobs to finish, then run:\n")
+printf("perl \$VADRBUILDTOOLSDIR/vb-step4-create-vadr-files.pl $model_root_file <name of vadr model dir to create> <gene value (use _ for space) <product value (use _ for space)>\n");
+
 
 #################################################################
 # Subroutine: RunCommand()

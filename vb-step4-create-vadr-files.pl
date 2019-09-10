@@ -48,9 +48,10 @@ my @mdl_info_file_A = ();
 open(IN, $model_root_file) || die "ERROR unable to open $model_root_file for reading";
 while($line = <IN>) { 
   chomp $line;
-  $line =~ s/^$root\.//;
-  push(@mdl_A, $line);
-  my $mdl_info_file = $root . "." . $line . ".info";
+  my $mdl = $line;
+  $mdl =~ s/^$root\.//;
+  push(@mdl_A, $mdl);
+  my $mdl_info_file = $root . "." . $mdl . ".info";
   push(@mdl_info_file_A, $mdl_info_file);
 
   # make sure all the files we require exist and are non-empty
@@ -58,7 +59,7 @@ while($line = <IN>) {
   my $cm_file_name = $cm_name . ".1p0" . ".vadr.cm";
   my $mdl_aa_fa_file = $root . "." . $mdl . ".aa.fa"; 
 
-  my @reqd_files_A = ($mdl_info_file, $cm_file_name, $mdl_aa_file);
+  my @reqd_files_A = ($mdl_info_file, $cm_file_name, $mdl_aa_fa_file);
   foreach my $reqd_file (@reqd_files_A) { 
     if(! -e $reqd_file) { die "ERROR required file $reqd_file does not exist. Did you (succesfully) run vb-step2-taxinfo2muscle-qsub.pl?"; }
     if(! -s $reqd_file) { die "ERROR required file $reqd_file exists but is empty. Did you (succesfully) run vb-step2-taxinfo2muscle-qsub.pl?"; }

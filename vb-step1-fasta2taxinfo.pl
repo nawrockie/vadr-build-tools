@@ -1,7 +1,7 @@
 #!/usr/bin/env perl
 use strict;
 
-my $usage = "perl vb-step0-gettaxinfo.pl <protein fasta file> <output root>\n";
+my $usage = "perl vb-step1-fasta2taxinfo.pl <protein fasta file> <output root>\n";
 if(scalar(@ARGV) != 2) { die $usage; }
 
 my ($fa_file, $root) = (@ARGV);
