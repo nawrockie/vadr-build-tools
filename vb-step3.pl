@@ -14,8 +14,22 @@ $root =~ s/\.model\.list$//;
 $gene =~ s/\_/ /g;
 $product =~ s/\_/ /g;
 
-my $scripts_dir = "./scripts";
-my $easel_dir = "/usr/local/infernal/1.1.2/bin";
+if(! exists($ENV{"VADRBUILDTOOLSDIR"})) { 
+  die "ERROR, the environment variable VADRBUILDTOOLSDIR is not set";
+}
+if(! (-d $ENV{"VADRBUILDTOOLSDIR"})) { 
+  die "ERROR, the directory specified by your environment variable VADRBUILDTOOLSDIR does not exist.\n"; 
+}    
+if(! exists($ENV{"VADREASELDIR"})) { 
+  die "ERROR, the environment variable VADREASELDIR is not set";
+}
+if(! (-d $ENV{"VADREASELDIR"})) { 
+  die "ERROR, the directory specified by your environment variable VADREASELDIR does not exist.\n"; 
+}    
+
+my $scripts_dir = $ENV{"VADRBUILDTOOLSDIR"} . "/scripts";
+my $easel_dir = $ENV{"VADREASELDIR"};
+
 if(! exists($ENV{"VADRINSTALLDIR"})) { die "ERROR the environment variable VADRINSTALLDIR is not set"; }
 my $cmpress_path = $ENV{"VADRINSTALLDIR"} . "/infernal-dev/src/cmpress";
 if(! -s $cmpress_path) { die "ERROR cmpress does not exist at $cmpress_path"; }
@@ -95,8 +109,10 @@ system("$cmd");
 
 # concatenate all the CM files together and press them
 # make qsub commands for building the models
-my @ere_opt_A  = ("0.6", "0.7", "0.8", "0.9", "1.0", "1.1", "1.2", "1.3", "1.4");
-my @ere_name_A = ("0p6", "0p7", "0p8", "0p9", "1p0", "1p1", "1p2", "1p3", "1p4");
+#my @ere_opt_A  = ("0.6", "0.7", "0.8", "0.9", "1.0", "1.1", "1.2", "1.3", "1.4");
+#my @ere_name_A = ("0p6", "0p7", "0p8", "0p9", "1p0", "1p1", "1p2", "1p3", "1p4");
+my @ere_opt_A  = ("1.0");
+my @ere_name_A = ("1p0");
 my $nere = scalar(@ere_opt_A);
 for(my $i = 0; $i < $nere; $i++) { 
   my $cat_cmd = "cat ";

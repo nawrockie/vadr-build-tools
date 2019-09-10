@@ -5,11 +5,24 @@ my $usage = "perl vb-step1.pl <protein fasta file> <tax-split file> <output root
 if(scalar(@ARGV) != 3) { die $usage; }
 
 my ($fa_file, $taxsplit_file, $root) = (@ARGV);
-my $scripts_dir = "/panfs/pan1/infernal/notebook/19_0905_vadr_cytb_initial/vadr-build-tools/scripts";
-my $easel_dir = "/usr/local/infernal/1.1.2/bin";
-
 my $cmd;
 my $line;
+
+if(! exists($ENV{"VADRBUILDTOOLSDIR"})) { 
+  die "ERROR, the environment variable VADRBUILDTOOLSDIR is not set";
+}
+if(! (-d $ENV{"VADRBUILDTOOLSDIR"})) { 
+  die "ERROR, the directory specified by your environment variable VADRBUILDTOOLSDIR does not exist.\n"; 
+}    
+if(! exists($ENV{"VADREASELDIR"})) { 
+  die "ERROR, the environment variable VADREASELDIR is not set";
+}
+if(! (-d $ENV{"VADREASELDIR"})) { 
+  die "ERROR, the directory specified by your environment variable VADREASELDIR does not exist.\n"; 
+}    
+
+my $scripts_dir = $ENV{"VADRBUILDTOOLSDIR"} . "/scripts";
+my $easel_dir = $ENV{"VADREASELDIR"};
 
 #########################################################
 # parse the taxsplit file

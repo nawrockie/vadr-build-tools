@@ -1,9 +1,43 @@
 EPN, Tue Jun 11 2019 
 
+=============================
+SETTING ENVIRONMENT VARIABLES
+=============================
+Before using these scripts you need to be set up to run VADR. Email
+eric.nawrocki@nih.gov for instructions. 
+
+AND
+
+you need to set an additional environment variable in your .bashrc or
+.chsrc file:
+
+If you are using the bash shell, add the following
+lines to the '.bashrc' file in your home directory:
+
+export VADRBUILDTOOLSDIR=<full path the directory this 00README.txt file is in>
+
+After adding the export lines to your .bashrc file, source that file
+to update your current environment with the command:
+
+source ~/.bashrc
+
+--
+If you are using the C shell, add the following
+lines to the '.cshrc' file in your home directory:
+
+setenv VADRBUILDTOOLDSDIR <full path the directory this 00README.txt file is in>
+
+After adding the setenv lines to your .cshrc file, source that file
+to update your current environment with the command:
+
+source ~/.cshrc
+
+(To determine which shell you use, type: 'echo $SHELL')
+
+===============================================================
 Creating VADR models from an unaligned fasta file of homologous
 protein sequences:
-
-------------------------
+===============================================================
 Step 1. Create intermediate files and a qsub script to submit MUSCLE
 alignment jobs to the compute farm:
 

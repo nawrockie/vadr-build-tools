@@ -1,7 +1,7 @@
 #!/usr/bin/env perl
 use strict;
 
-my $usage = "perl vb-step2.pl <model list>\n";
+my $usage = "perl vb-step3-muscle-aln2cmbuild-qsub.pl <model list>\n";
 if(scalar(@ARGV) != 1) { die $usage; }
 
 my ($model_root_file) = (@ARGV);
@@ -11,8 +11,21 @@ if($root !~ m/\.model\.list$/) {
 }
 $root =~ s/\.model\.list$//;
 
-my $scripts_dir = "./scripts";
-my $easel_dir = "/usr/local/infernal/1.1.2/bin";
+if(! exists($ENV{"VADRBUILDTOOLSDIR"})) { 
+  die "ERROR, the environment variable VADRBUILDTOOLSDIR is not set";
+}
+if(! (-d $ENV{"VADRBUILDTOOLSDIR"})) { 
+  die "ERROR, the directory specified by your environment variable VADRBUILDTOOLSDIR does not exist.\n"; 
+}    
+if(! exists($ENV{"VADREASELDIR"})) { 
+  die "ERROR, the environment variable VADREASELDIR is not set";
+}
+if(! (-d $ENV{"VADREASELDIR"})) { 
+  die "ERROR, the directory specified by your environment variable VADREASELDIR does not exist.\n"; 
+}    
+
+my $scripts_dir = $ENV{"VADRBUILDTOOLSDIR"} . "/scripts";
+my $easel_dir = $ENV{"VADREASELDIR"};
 
 my $cmd;
 my $line;
@@ -90,8 +103,8 @@ for($m = 0; $m < $nmdl; $m++) {
 
   # make qsub commands for building the models
   my $cm_name = $root . "." . $mdl;
-  my @ere_opt_A  = ("0.6", "0.7", "0.8", "0.9", "1.0", "1.1", "1.2", "1.3", "1.4");
-  my @ere_name_A = ("0p6", "0p7", "0p8", "0p9", "1p0", "1p1", "1p2", "1p3", "1p4");
+  my @ere_opt_A  = ("1.0");
+  my @ere_name_A = ("1p0");
   my $nere = scalar(@ere_opt_A);
 
   for(my $i = 0; $i < $nere; $i++) { 
