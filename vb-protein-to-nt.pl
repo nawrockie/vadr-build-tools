@@ -67,8 +67,7 @@ RunCommand($cmd, 1);
 #########################################################
 # fetch info on codon_start using edirect for nucleotide accessions
 my $info2_file = $root . ".info2.txt";
-#$cmd = "perl $scripts_dir/lookup-nt-acc.pl $info_file > $info2_file";
-$cmd = "perl $scripts_dir/lookup-nt-acc-join.pl $info_file > $info2_file";
+$cmd = "perl $scripts_dir/lookup-nt-acc.pl $info_file > $info2_file";
 RunCommand($cmd, 1);
 #########################################################
 
@@ -78,8 +77,7 @@ my $nt_fa_file        = $root . ".nt.fa";
 my $map_file          = $root . ".map";
 
 # create list of 'source' nt accessions
-#$cmd = "perl $scripts_dir/parse-by-source.pl $info2_file | sort | uniq > $source_list";
-$cmd = "perl $scripts_dir/parse-by-source-join.pl $info2_file | sort | uniq > $source_list";
+$cmd = "perl $scripts_dir/parse-by-source.pl $info2_file | sort | uniq > $source_list";
 RunCommand($cmd, 1);
 
 # fetch the source sequences
@@ -91,14 +89,7 @@ $cmd = "$easel_dir/esl-sfetch --index $source_nt_fa_file";
 RunCommand($cmd, 1);
   
 # fetch the subseqs that encode the proteins from their sources
-#$cmd = "perl $scripts_dir/parse-to-sfetch.pl $info_file | $easel_dir/esl-sfetch -Cf $source_nt_fa_file - > $nt_fa_file";
-$cmd = "perl $scripts_dir/fetch-given-info.pl $info_file $source_nt_fa_file $nt_fa_file";
-RunCommand($cmd, 1);
-
-exit 0;
-
-# make a map file that maps protein accessions to nucleotide accessions
-$cmd = "perl $scripts_dir/make-map.pl $info_file > $map_file";
+$cmd = "perl $scripts_dir/fetch-given-info.pl $info_file $source_nt_fa_file $nt_fa_file $map_file";
 RunCommand($cmd, 1);
 
 #################################################################
