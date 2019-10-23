@@ -3,6 +3,8 @@ use LWP::Simple;
 use JSON qw( decode_json );     
 use XML::LibXML;
 
+require "vadr.pm";
+
 use strict;
 
 my $usage = "perl lookup-nt-acc.pl <info file with coded_by value for all protein accessions>";
@@ -35,16 +37,38 @@ while(my $line = <IN>) {
   my $coded_by_line = $el_A[1];
   my $strand = "+";
   my $coords = undef;
-  if($coded_by_line =~ /coded_by:complement\(([^\:]+)\:(\S+)\)/) { 
-    ($source, $coords) = ($1, $2);
+
+  # first extract the source accession
+  if($coded_by_line =~ /coded_by:join\(([^\:]+)\:/) { 
+    #coded_by:join(NC_044902.1:16688..17577,NC_044902.1:18432..19113)
+    $source = $1;
+  }
+  elsif($coded_by_line =~ /coded_by:complement\(join\(([^\:]+)\:/) { 
+    $source = $1;
+  }
+  elsif($coded_by_line =~ /coded_by:complement\(([^\:]+)\:/) { 
+    $source = $1;
+  }
+  elsif($coded_by_line =~ /coded_by:([^\:]+)\:/) { 
+    $source = $1;
+  }
+  else { 
+    die "ERROR couldn't figure out accession in coded_by value on line $line"; 
+  }
+
+  my $no_source_coded_by_line = $coded_by_line;
+  $no_source_coded_by_line =~ s/\Q$source\E\://g; 
+
+  if($no_source_coded_by_line =~ /coded_by:complement\((\S+)\)/) { 
+    ($coords) = ($1);
     $strand = "-";
   }
-  elsif($coded_by_line =~ /coded_by:([^\:]+)\:(\S+)/) { 
-    ($source, $coords) = ($1, $2);
+  elsif($no_source_coded_by_line =~ /coded_by:(\S+)/) { 
+    ($coords) = ($1);
     $strand = "+";
   }
   else { 
-    die "ERROR unable to parse line $line\n"; 
+    die "ERROR unable to parse no_source_coded_by_line: $no_source_coded_by_line in line\n$line\n"; 
   }
   if($coords =~ /\<?(\d+)\.\.\>?(\d+)/) { 
     my($start, $stop) = ($1, $2);

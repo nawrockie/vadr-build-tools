@@ -84,11 +84,7 @@ for(my $m = 0; $m < $nmdl; $m++) {
   RunCommand($cmd, 1);
   
   # fetch the subseqs that encode the proteins from their sources
-  $cmd = "perl $scripts_dir/parse-to-sfetch.pl $info_file | $easel_dir/esl-sfetch -Cf $source_nt_fa_file - > $nt_fa_file";
-  RunCommand($cmd, 1);
-
-  # make a map file that maps protein accessions to nucleotide accessions
-  $cmd = "perl $scripts_dir/make-map.pl $info_file > $map_file";
+  $cmd = "perl $scripts_dir/fetch-given-info.pl $info_file $source_nt_fa_file $nt_fa_file $map_file";
   RunCommand($cmd, 1);
 
   # create a nucleotide alignment by translating the protein alignment in place

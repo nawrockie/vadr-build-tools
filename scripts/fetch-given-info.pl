@@ -1,9 +1,9 @@
 #!/usr/bin/env perl
 use strict;
 
-my $usage = "perl fetch-given-info.pl <info file> <fasta file to fetch from> <fasta file to create>";
-if(scalar(@ARGV) != 3) { die $usage; }
-my ($info_file, $source_fa_file, $output_fa_file) = (@ARGV);
+my $usage = "perl fetch-given-info.pl <info file> <fasta file to fetch from> <fasta file to create> <map file to create>";
+if(scalar(@ARGV) != 4) { die $usage; }
+my ($info_file, $source_fa_file, $output_fa_file, $map_file) = (@ARGV);
 
 if(! exists($ENV{"VADRBUILDTOOLSDIR"})) { 
   die "ERROR, the environment variable VADRBUILDTOOLSDIR is not set";
@@ -33,11 +33,15 @@ my $cmd = undef;
 my $one_seg_sfetch_file = "tmp.sfetch";
 open(SFETCH, ">", $one_seg_sfetch_file) || die "ERROR unable to open $one_seg_sfetch_file for writing";
 
+open(MAP, ">", $map_file) || die "ERROR unable to open $map_file for writing";
+
 my $n2fetch = 0;
 open(IN, $info_file) || die "ERROR unable to open $info_file";
 while(my $line = <IN>) { 
   chomp $line;
   my @el_A = split(/\s+/, $line);
+  my $accver = $el_A[0];
+  $accver =~ s/accver://;
   my $coded_by_line = $el_A[1];
   my $strand = "";
 
@@ -77,6 +81,8 @@ while(my $line = <IN>) {
   $vadr_coords_no_strand =~ s/\:\-//g;
   my $newname = $source . "/" . $vadr_coords_no_strand;
 
+  printf MAP ("%s %s\n", $accver, $newname);
+
   my $sfetch_str = sprintf("%s %d %d %s\n", $newname, $start_A[0], $stop_A[0], $source);
   if($nsgm == 1) { 
     printf SFETCH $sfetch_str;
@@ -102,13 +108,14 @@ while(my $line = <IN>) {
   }
 }
 close(SFETCH);
+close(MAP);
 
 if($n2fetch > 0) { 
   # fetch all single segment seqs
   $cmd = "$easel_dir/esl-sfetch -Cf $source_fa_file $one_seg_sfetch_file >> $output_fa_file";
   RunCommand($cmd, 1);
 }
-#unlink $one_seg_sfetch_file;
+unlink $one_seg_sfetch_file;
 
 #################################################################
 # SUBROUTINES from VADR 0.991

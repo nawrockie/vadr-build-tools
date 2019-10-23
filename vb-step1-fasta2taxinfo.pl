@@ -55,29 +55,19 @@ RunCommand($cmd, 1);
 #########################################################
 
 #########################################################
-# HOPEFULLY TEMPORARY
-# remove any sequence with a join 
+# fetch info on codon_start using edirect for nucleotide accessions
 my $info2_file = $root . ".info2.txt";
-$cmd = "grep -v join $info_file > $info2_file";
+$cmd = "perl $scripts_dir/lookup-nt-acc.pl $info2_file > $info2_file";
 RunCommand($cmd, 1);
 my $nseq2 = `wc -l $info2_file`;
 chomp $nseq2;
 #########################################################
 
 #########################################################
-# fetch info on codon_start using edirect for nucleotide accessions
-my $info3_file = $root . ".info3.txt";
-$cmd = "perl $scripts_dir/lookup-nt-acc.pl $info2_file > $info3_file";
-RunCommand($cmd, 1);
-my $nseq3 = `wc -l $info3_file`;
-chomp $nseq3;
-#########################################################
-
-#########################################################
 # split files up by translation_table value, all seqs for each model in VADR
 # must currently use the same genetic code (translation_table).
 my $tt_file = $root . ".tt.list";
-$cmd = "perl $scripts_dir/sort-by-tt.pl $info3_file $root | grep -v ^\# > $tt_file";
+$cmd = "perl $scripts_dir/sort-by-tt.pl $info2_file $root | grep -v ^\# > $tt_file";
 RunCommand($cmd, 1);
 
 #################################################################

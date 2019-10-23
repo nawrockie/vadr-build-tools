@@ -26,9 +26,9 @@ my $easel_dir = $ENV{"VADREASELDIR"};
 
 # make sure you have the required files created as output by earlier vb-step*pl scripts
 my $short_fa_file = $root . ".aa.short.fa";
-my $info3_file    = $root . ".info3.txt";
+my $info2_file    = $root . ".info2.txt";
 my $tt_file       = $root . ".tt.list";
-my @reqd_files_A  = ($short_fa_file, $short_fa_file.".ssi", $info3_file, $tt_file);
+my @reqd_files_A  = ($short_fa_file, $short_fa_file.".ssi", $info2_file, $tt_file);
 foreach my $reqd_file (@reqd_files_A) { 
   if(! -e $reqd_file) { die "ERROR required file $reqd_file does not exist. Did you (succesfully) run vb-step1-fasta2taxinfo.pl?"; }
   if(! -s $reqd_file) { die "ERROR required file $reqd_file exists but is empty. Did you (succesfully) run vb-step1-fasta2taxinfo.pl?"; }
@@ -58,7 +58,7 @@ close(IN);
 
 #########################################################
 # determine count of seqs
-my $nseq3 = `wc -l $info3_file`;
+my $nseq3 = `wc -l $info2_file`;
 chomp $nseq3;
 #########################################################
 
@@ -147,7 +147,7 @@ for($m = 0; $m < $nmdl; $m++) {
 close(MUSCLE);
 
 if($nseq4 != $nseq3) { 
-  die "ERROR, the $nmdl translation_table/taxonomic_group models only comprise $nseq4 of the $nseq3 files in $info3_file\nYou need to specify additional taxonomic groups in $taxsplit_file";
+  die "ERROR, the $nmdl translation_table/taxonomic_group models only comprise $nseq4 of the $nseq3 files in $info2_file\nYou need to specify additional taxonomic groups in $taxsplit_file";
 }
 printf("\nScript to submit $nmdl muscle jobs to the farm is in:\n$muscle_qsub_file\n");
 printf("\nRun that script, wait for all jobs to finish, then run:\n\$VADRBUILDTOOLSDIR/vb-step3-muscle-alns2cmbuild-qsub.pl $model_root_file\n");
