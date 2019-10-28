@@ -26,9 +26,16 @@ if(! exists($ENV{"VADREASELDIR"})) {
 if(! (-d $ENV{"VADREASELDIR"})) { 
   die "ERROR, the directory specified by your environment variable VADREASELDIR does not exist.\n"; 
 }    
+if(! exists($ENV{"VADRBLASTDIR"})) { 
+  die "ERROR, the environment variable VADRBLASTDIR is not set";
+}
+if(! (-d $ENV{"VADRBLASTDIR"})) { 
+  die "ERROR, the directory specified by your environment variable VADRBLASTDIR does not exist.\n"; 
+}    
 
 my $scripts_dir = $ENV{"VADRBUILDTOOLSDIR"} . "/scripts";
 my $easel_dir = $ENV{"VADREASELDIR"};
+my $blast_dir = $ENV{"VADRBLASTDIR"};
 
 if(! exists($ENV{"VADRINSTALLDIR"})) { die "ERROR the environment variable VADRINSTALLDIR is not set"; }
 my $cmpress_path = $ENV{"VADRINSTALLDIR"} . "/infernal-dev/src/cmpress";
@@ -104,7 +111,7 @@ for($m = 0; $m < $nmdl; $m++) {
   system("$cmd");
 
   # make the blast db
-  my $cmd = "/usr/bin/makeblastdb -in $blast_db_dst_file -dbtype prot > /dev/null";
+  my $cmd = "$blast_dir/makeblastdb -in $blast_db_dst_file -dbtype prot > /dev/null";
   system("$cmd");
 
   # move to the new dir
