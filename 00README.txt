@@ -10,6 +10,8 @@ for building a VADR database with this command:
 
 git clone https://github.com/nawrockie/vadr-build-tools.git
 
+Then move into the directory that gets created called 'vadr-build-tools'.
+
 =============================
 SETTING ENVIRONMENT VARIABLES
 =============================
@@ -24,7 +26,7 @@ you need to set an additional environment variable in your .bashrc or
 If you are using the bash shell, add the following
 lines to the '.bashrc' file in your home directory:
 
-export VADRBUILDTOOLSDIR=<full path the directory this 00README.txt file is in>
+export VADRBUILDTOOLSDIR=<path to current directory (created by git clone command above)>
 
 After adding the export lines to your .bashrc file, source that file
 to update your current environment with the command:
@@ -35,7 +37,7 @@ source ~/.bashrc
 If you are using the C shell, add the following
 lines to the '.cshrc' file in your home directory:
 
-setenv VADRBUILDTOOLDSDIR <full path the directory this 00README.txt file is in>
+setenv VADRBUILDTOOLSDIR<path to current directory (created by git clone command above)>
 
 After adding the setenv lines to your .cshrc file, source that file
 to update your current environment with the command:
@@ -63,7 +65,7 @@ source ~/.cshrc
    translation table information for all sequences.
 
    Example command: 
-   > perl $VADRBUILDTOOLSDIR/vb-step1-fasta2taxinfo.pl cytb.9175.fa cytb > cytb.step1.out
+   $ perl $VADRBUILDTOOLSDIR/vb-step1-fasta2taxinfo.pl cytb.9175.fa cytb > cytb.step1.out
 
 ------------------------------------------------------------
 
@@ -73,7 +75,7 @@ source ~/.cshrc
 
    First, look at how many translation tables there were in your
    input:
-   > cat cytb.tt.list
+   $ cat cytb.tt.list
    2
    5
    4
@@ -93,7 +95,7 @@ source ~/.cshrc
 
    Example, list groups and size of groups for tax level 3 (phyla) for translation table 5
 
-   > cat cytb.tt5.info | awk '{ print $4 }' | sort | awk -F\; '{ printf("%s;%s;%s;\n", $1, $2, $3); }' | sort | uniq -c
+   $ cat cytb.tt5.info | awk '{ print $4 }' | sort | awk -F\; '{ printf("%s;%s;%s;\n", $1, $2, $3); }' | sort | uniq -c
       5 taxonomy:Eukaryota;Metazoa;Chaetognatha;
       9 taxonomy:Eukaryota;Metazoa;Chordata;
    2608 taxonomy:Eukaryota;Metazoa;Ecdysozoa;
@@ -105,7 +107,7 @@ source ~/.cshrc
      10 taxonomy:Eukaryota;Metazoa;Xenacoelomorpha;
 
    To look at level 2, use this command
-   > cat cytb.tt5.info | awk '{ print $4 }' | sort | awk -F\; '{ printf("%s;%s;\n", $1, $2); }' | sort | uniq -c
+   $ cat cytb.tt5.info | awk '{ print $4 }' | sort | awk -F\; '{ printf("%s;%s;\n", $1, $2); }' | sort | uniq -c
    3207 taxonomy:Eukaryota;Metazoa;
 
    Pick the level you want, and then update a file called 'cytb.tax'
@@ -126,7 +128,7 @@ source ~/.cshrc
 
    A file with the levels I chose for all translation tables for cytb
    is:
-   > cat cytb.tax
+   $ cat cytb.tax
    # translation_table taxonomy_level prefix
    # tt2: level 7 (mammalia, etc.) 
    2 7 vertebrata-
@@ -161,11 +163,11 @@ source ~/.cshrc
    using muscle or each taxonomic group/translation table set.
 
    Example command:
-   > perl $VADRBUILDTOOLSDIR/vb-step2-taxinfo2muscle-qsub.pl cytb.9175.fa cytb.tax cytb > step2.out
+   $ perl $VADRBUILDTOOLSDIR/vb-step2-taxinfo2muscle-qsub.pl cytb.9175.fa cytb.tax cytb > step2.out
 
    When that finishes, look at the end of step2.out:
    
-   > tail -n 5 step2.out
+   $ tail -n 5 step2.out
    ~~~~~~~~~~~~~~~~~~
    Script to submit 49 muscle jobs to the farm is in:
    cytb.muscle.qsub
@@ -175,14 +177,14 @@ source ~/.cshrc
    ~~~~~~~~~~~~~~~~~~
 
    Run the script that submits the muscle jobs:
-   > sh cytb.muscle.qsub 
+   $ sh cytb.muscle.qsub 
    
    Then wait for all of those jobs to finish. They are finished when
    the command 'qstat' returns no text.
 
    Here is an example of a 'qstat' command output when there is still
    a single muscle alignment job running:
-   > qstat
+   $ qstat
    job-ID     prior   name       user         state submit/start at     queue                          jclass                         slots ja-task-ID 
    ------------------------------------------------------------------------------------------------------------------------------------------------
    226980328 0.54677 tt5.ecdyso nawrocke     r     09/10/2019 11:37:28 unified@sge531.be-md.ncbi.nlm.                                    1        
@@ -194,7 +196,7 @@ source ~/.cshrc
    will submit the 'cmbuild' jobs to create the CM files for VADR.
    
    Example command:
-   > perl $VADRBUILDTOOLSDIR/vb-step3-muscle-alns2cmbuild-qsub.pl cytb.model.list > step3.out 
+   $ perl $VADRBUILDTOOLSDIR/vb-step3-muscle-alns2cmbuild-qsub.pl cytb.model.list > step3.out 
 
    You may see some output like this:
    SKIPPING nt_len < 3*M     (nt NC_012447.1/3518-4638: 1121 aa YP_002790679.1: 374)
@@ -205,7 +207,7 @@ source ~/.cshrc
 
    When that finishes, look at the end of step3.out:
    
-   > tail -n 5 step3.out
+   $ tail -n 5 step3.out
    ~~~~~~~~~~~~~~~~~~
    Script to submit 49 cmbuild jobs to the farm is in:
    cytb.cmbuild.qsub
@@ -215,7 +217,7 @@ source ~/.cshrc
    ~~~~~~~~~~~~~~~~~~
 
    Run the script that submits the cmbuild jobs:
-   > sh cytb.cmbuild.qsub 
+   $ sh cytb.cmbuild.qsub 
    
    Then wait for all of those jobs to finish. They are finished when
    the command 'qstat' returns no text.
@@ -228,7 +230,7 @@ source ~/.cshrc
    VADR: 
 
    Example command:
-   > perl $VADRBUILDTOOLSDIR/vb-step4-create-vadr-files.pl cytb.model.list vadr-cytb-i0-models-0.991.1-dir CYTB cytochrome_b > step4.out 
+   $ perl $VADRBUILDTOOLSDIR/vb-step4-create-vadr-files.pl cytb.model.list vadr-cytb-i0-models-0.991.1-dir CYTB cytochrome_b > step4.out 
    
    This will create a directory called vadr-cytb-i0-models-0.991.1-dir
    with all the files you need to run VADR on cytb sequences. 
@@ -238,7 +240,7 @@ source ~/.cshrc
 7. Test run of v-annotate.pl:
 
    Example command:
-   > v-annotate.pl -f --keep -i vadr-cytb-i0-models-0.991.1-dir/vadr.cytb.minfo -b vadr-cytb-i0-models-0.991.1-dir -m vadr-cytb-i0-models-0.991.1-dir/vadr.cytb.1p0.cm --xlongest cytb.tt5.chordata.nt.fa va-test
+   $ v-annotate.pl -f --keep -i vadr-cytb-i0-models-0.991.1-dir/vadr.cytb.minfo -b vadr-cytb-i0-models-0.991.1-dir -m vadr-cytb-i0-models-0.991.1-dir/vadr.cytb.1p0.cm --xlongest cytb.tt5.chordata.nt.fa va-test
    
 ------------------------------------------------------------
    
@@ -251,10 +253,10 @@ source ~/.cshrc
    submit these jobs to the farm: 
 
    Example command:
-   > perl $VADRBUILDTOOLSDIR/vb-i0-qsub.pl cytb.model.list vadr-cytb-i0-models-0.991.1-dir > i0.qsub.sh
+   $ perl $VADRBUILDTOOLSDIR/vb-i0-qsub.pl cytb.model.list vadr-cytb-i0-models-0.991.1-dir > i0.qsub.sh
 
    Then 
-   > sh i0.qsub.sh
+   $ sh i0.qsub.sh
 
 ------------------------------------------------------------
 
