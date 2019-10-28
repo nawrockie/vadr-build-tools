@@ -2,6 +2,14 @@ EPN, Mon Sep  9 14:23:33 2019
 
 Outline of vadr-model-build procedure for marker genes.
 
+============================
+DOWNLOADING VADR-BUILD-TOOLS
+============================
+The first step is to clone the github repo that includes the scripts
+for building a VADR database with this command:
+
+git clone https://github.com/nawrockie/vadr-build-tools.git
+
 =============================
 SETTING ENVIRONMENT VARIABLES
 =============================
