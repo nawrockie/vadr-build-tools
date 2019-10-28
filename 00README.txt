@@ -212,7 +212,10 @@ source ~/.cshrc
    Script to submit 49 cmbuild jobs to the farm is in:
    cytb.cmbuild.qsub
 
-   Run that script, wait for all jobs to finish, then run:
+   Run that script with the command: 
+   $ sh ./cytb.cmbuild.qsub
+
+   Then wait for all jobs to finish, then run:
    perl $VADRBUILDTOOLSDIR/vb-step4-create-vadr-files.pl cytb.model.list <name of vadr model dir to create> <gene value (use _ for space) <product value (use _ for space)>
    ~~~~~~~~~~~~~~~~~~
 
