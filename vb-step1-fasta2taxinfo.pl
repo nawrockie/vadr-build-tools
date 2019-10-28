@@ -57,7 +57,7 @@ RunCommand($cmd, 1);
 #########################################################
 # fetch info on codon_start using edirect for nucleotide accessions
 my $info2_file = $root . ".info2.txt";
-$cmd = "perl $scripts_dir/lookup-nt-acc.pl $info2_file > $info2_file";
+$cmd = "perl $scripts_dir/lookup-nt-acc.pl $info_file > $info2_file";
 RunCommand($cmd, 1);
 my $nseq2 = `wc -l $info2_file`;
 chomp $nseq2;

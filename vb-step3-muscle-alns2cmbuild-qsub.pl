@@ -115,7 +115,7 @@ for(my $m = 0; $m < $nmdl; $m++) {
 }
 close(CMBUILD);
 printf("\nScript to submit $nmdl cmbuild jobs to the farm is in:\n$cmbuild_qsub_file\n");
-printf("\nRun that script, wait for all jobs to finish, then run:\n")
+printf("\nRun that script, wait for all jobs to finish, then run:\n");
 printf("perl \$VADRBUILDTOOLSDIR/vb-step4-create-vadr-files.pl $model_root_file <name of vadr model dir to create> <gene value (use _ for space) <product value (use _ for space)>\n");
 
 
