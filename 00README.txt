@@ -130,7 +130,7 @@ source ~/.cshrc
 
    A file with the levels I chose for all translation tables for cytb
    is:
-   $ cat cytb.tax
+   $ cat tax-files/cytb.tax
    # translation_table taxonomy_level prefix
    # tt2: level 7 (mammalia, etc.) 
    2 7 vertebrata-
@@ -165,7 +165,7 @@ source ~/.cshrc
    using muscle or each taxonomic group/translation table set.
 
    Example command:
-   $ perl $VADRBUILDTOOLSDIR/vb-step2-taxinfo2muscle-qsub.pl cytb.9175.fa cytb.tax cytb > step2.out
+   $ perl $VADRBUILDTOOLSDIR/vb-step2-taxinfo2muscle-qsub.pl cytb.9175.fa tax-files/cytb.tax cytb > step2.out
 
    When that finishes, look at the end of step2.out:
    
