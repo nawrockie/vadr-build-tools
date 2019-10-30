@@ -241,6 +241,16 @@ source ~/.cshrc
 
 7. Test run of v-annotate.pl:
 
+   Pick one of the sequence files that ends with .nt.fa to use for a
+   test run of v-annotate.pl to make sure the model files were created
+   correctly. You probably want to pick one of the .nt.fa files with
+   not too many sequences (less than 50) so the command below doesn't
+   take too long. (To find out how many sequences are in a file:
+   $VADREASELDIR/esl-seqstat <fasta-file>.)
+
+   For the cytb example, we'll use cytb.tt5.chordata.nt.fa which has
+   about 10 sequences:
+
    Example command:
    $ v-annotate.pl -f --keep -i vadr-cytb-i0-models-0.991.1-dir/vadr.cytb.minfo -b vadr-cytb-i0-models-0.991.1-dir -m vadr-cytb-i0-models-0.991.1-dir/vadr.cytb.1p0.cm --xlongest cytb.tt5.chordata.nt.fa va-test
    
