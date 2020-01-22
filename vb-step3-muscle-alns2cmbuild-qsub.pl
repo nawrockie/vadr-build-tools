@@ -4,6 +4,8 @@ use strict;
 my $usage = "perl vb-step3-muscle-alns2cmbuild-qsub.pl <model list>\n";
 if(scalar(@ARGV) != 1) { die $usage; }
 
+my $version = "0.02";
+
 my ($model_root_file) = (@ARGV);
 my $root = $model_root_file;
 if($root !~ m/\.model\.list$/) { 
@@ -30,9 +32,10 @@ if(! (-d $ENV{"VADRINFERNALDEVDIR"})) {
   die "ERROR, the directory specified by your environment variable VADRINFERNALDEVDIR does not exist.\n"; 
 }    
 
-my $scripts_dir = $ENV{"VADRBUILDTOOLSDIR"} . "/scripts";
-my $easel_dir = $ENV{"VADREASELDIR"};
-my $infernal_dev_dir = $ENV{"VADRINFERNALDEVDIR"};
+my $scripts_dir  = $ENV{"VADRBUILDTOOLSDIR"} . "/scripts";
+my $easel_dir    = $ENV{"VADREASELDIR"};
+my $infernal_dir = $ENV{"VADRINFERNALDEVDIR"};
+my $hmmer_dir    = $ENV{"VADRINFERNALDEVDIR"};
 my $cmd;
 
 # parse the model_root file
@@ -55,8 +58,8 @@ while(my $line = <IN>) {
   }
 }
 
-my $cmbuild_qsub_file = $root . ".cmbuild.qsub";
-open(CMBUILD, ">", $cmbuild_qsub_file) || die "ERROR unable to open $cmbuild_qsub_file for writing";
+my $build_qsub_file  = $root . ".build.qsub";
+open(BUILD,  ">", $cmbuild_qsub_file)  || die "ERROR unable to open $build_qsub_file for writing";
 
 # for each model: 
 my $nmdl = scalar(@mdl_A);
@@ -115,11 +118,18 @@ for(my $m = 0; $m < $nmdl; $m++) {
     my $cm_root = $cm_name . "." . $ere_name_A[$i];
     my $cm_file_name = $cm_root . ".vadr.cm";
     my $cmbuild_file_name = $cm_root . ".vadr.cmbuild";
-    my $cmbuild_cmd = "$infernal_dev_dir/cmbuild -F -n $cm_name --emaxseq 100000 --noss --ere $ere_opt_A[$i] $cm_file_name $nt_stk_file > $cmbuild_file_name";
-    printf CMBUILD ("qsub -N $cm_root -b y -v SGE_FACILITIES -P unified -S /bin/bash -cwd -V -j n -o /dev/null -e $cm_root.err -l m_mem_free=8G,h_rt=2880000,mem_free=8G,h_vmem=8G -m n \"$cmbuild_cmd\"\n");
+    my $cmbuild_cmd = "$infernal_dir/cmbuild -F -n $cm_name --emaxseq 100000 --noss --ere $ere_opt_A[$i] $cm_file_name $nt_stk_file > $cmbuild_file_name";
+    printf BUILD ("qsub -N $cm_root -b y -v SGE_FACILITIES -P unified -S /bin/bash -cwd -V -j n -o /dev/null -e $cm_root.err -l m_mem_free=8G,h_rt=2880000,mem_free=8G,h_vmem=8G -m n \"$cmbuild_cmd\"\n");
   }
+
+  # build HMM
+  my $hmm_root = $hmm_name;
+  my $hmm_file_name = $hmm_root . ".vadr.hmm";
+  my $hmmbuild_file_name = $hmm_root . ".vadr.hmmbuild";
+  my $hmmbuild_cmd = "$hmmer_dir/hmmbuild -n $hmm_name $hmm_file_name $aa_aln_file > $hmmbuild_file_name";
+  printf BUILD ("qsub -N $hmm_root.hmm -b y -v SGE_FACILITIES -P unified -S /bin/bash -cwd -V -j n -o /dev/null -e $hmm_root.hmm.err -l m_mem_free=8G,h_rt=2880000,mem_free=8G,h_vmem=8G -m n \"$hmmbuild_cmd\"\n");
 }
-close(CMBUILD);
+close(BUILD);
 printf("\nScript to submit $nmdl cmbuild jobs to the farm is in:\n$cmbuild_qsub_file\n");
 printf("\nRun that script, wait for all jobs to finish, then run:\n");
 printf("perl \$VADRBUILDTOOLSDIR/vb-step4-create-vadr-files.pl $model_root_file <name of vadr model dir to create> <gene value (use _ for space) <product value (use _ for space)>\n");

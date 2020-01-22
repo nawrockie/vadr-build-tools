@@ -4,6 +4,8 @@ use strict;
 my $usage = "perl vb-step4-create-vadr-files.pl <model list> <name of vadr model dir to create> <gene value (use _ for space)> <product value (use _ for space)>\n";
 if(scalar(@ARGV) != 4) { die $usage; }
 
+my $version = "0.02";
+
 my ($model_root_file, $vadr_model_dir, $gene, $product) = (@ARGV);
 my $root = $model_root_file;
 if($root !~ m/\.model\.list$/) { 
@@ -94,8 +96,9 @@ for($m = 0; $m < $nmdl; $m++) {
   my $mdl_info_file = $mdl_info_file_A[$m];
   my $mdl_aa_fa_file = $root . "." . $mdl . ".aa.fa"; 
 
-  my $cm_name = $root . "." . $mdl;
-  my $cm_file_name = $cm_name . ".1p0" . ".vadr.cm";
+  my $cm_and_hmm_name  = $root . "." . $mdl;
+  my $cm_file_name  = $cm_and_hmm_name . ".1p0" . ".vadr.cm";
+  my $hmm_file_name = $cm_and_hmm_name . "vadr.hmm";
 
   my $blast_db_dst_file = $root . "." . $mdl . ".vadr.protein.fa";
 
@@ -104,7 +107,7 @@ for($m = 0; $m < $nmdl; $m++) {
   if($clen =~ s/^CLEN\s+//) {
     chomp $clen;
   }
-  print MINFO ("MODEL $root.$mdl group:\"$group\" subgroup:\"$subgroup\" transl_table:\"$tt\" length:\"$clen\" blastdb:\"$blast_db_dst_file\"\n");
+  print MINFO ("MODEL $root.$mdl group:\"$group\" subgroup:\"$subgroup\" transl_table:\"$tt\" length:\"$clen\" blastdb:\"$blast_db_dst_file\" hmmfile:\"$hmm_file_name\"\n");
   print MINFO ("FEATURE $root.$mdl type:\"CDS\" coords:\"1..$clen\:+\" gene:\"$gene\" product:\"$product\"\n");
 
   my $cmd = "cp $mdl_aa_fa_file $blast_db_dst_file";
