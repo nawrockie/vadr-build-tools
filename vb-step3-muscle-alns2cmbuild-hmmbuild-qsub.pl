@@ -31,11 +31,17 @@ if(! exists($ENV{"VADRINFERNALDEVDIR"})) {
 if(! (-d $ENV{"VADRINFERNALDEVDIR"})) { 
   die "ERROR, the directory specified by your environment variable VADRINFERNALDEVDIR does not exist.\n"; 
 }    
+if(! exists($ENV{"VADRHMMERDIR"})) { 
+  die "ERROR, the environment variable VADRHMMERDIR is not set";
+}
+if(! (-d $ENV{"VADRHMMERDIR"})) { 
+  die "ERROR, the directory specified by your environment variable VADRHMMERDIR does not exist.\n"; 
+}    
 
 my $scripts_dir  = $ENV{"VADRBUILDTOOLSDIR"} . "/scripts";
 my $easel_dir    = $ENV{"VADREASELDIR"};
 my $infernal_dir = $ENV{"VADRINFERNALDEVDIR"};
-my $hmmer_dir    = $ENV{"VADRINFERNALDEVDIR"};
+my $hmmer_dir    = $ENV{"VADRHMMERDIR"};
 my $cmd;
 
 # parse the model_root file
@@ -59,7 +65,7 @@ while(my $line = <IN>) {
 }
 
 my $build_qsub_file  = $root . ".build.qsub";
-open(BUILD,  ">", $cmbuild_qsub_file)  || die "ERROR unable to open $build_qsub_file for writing";
+open(BUILD,  ">", $build_qsub_file)  || die "ERROR unable to open $build_qsub_file for writing";
 
 # for each model: 
 my $nmdl = scalar(@mdl_A);
@@ -123,6 +129,7 @@ for(my $m = 0; $m < $nmdl; $m++) {
   }
 
   # build HMM
+  my $hmm_name = $cm_name;
   my $hmm_root = $hmm_name;
   my $hmm_file_name = $hmm_root . ".vadr.hmm";
   my $hmmbuild_file_name = $hmm_root . ".vadr.hmmbuild";
@@ -130,7 +137,7 @@ for(my $m = 0; $m < $nmdl; $m++) {
   printf BUILD ("qsub -N $hmm_root.hmm -b y -v SGE_FACILITIES -P unified -S /bin/bash -cwd -V -j n -o /dev/null -e $hmm_root.hmm.err -l m_mem_free=8G,h_rt=2880000,mem_free=8G,h_vmem=8G -m n \"$hmmbuild_cmd\"\n");
 }
 close(BUILD);
-printf("\nScript to submit $nmdl cmbuild jobs to the farm is in:\n$cmbuild_qsub_file\n");
+printf("\nScript to submit $nmdl cmbuild and hmmbuild jobs to the farm is in:\n$build_qsub_file\n");
 printf("\nRun that script, wait for all jobs to finish, then run:\n");
 printf("perl \$VADRBUILDTOOLSDIR/vb-step4-create-vadr-files.pl $model_root_file <name of vadr model dir to create> <gene value (use _ for space) <product value (use _ for space)>\n");
 
