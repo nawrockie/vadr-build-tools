@@ -1,12 +1,20 @@
 #!/usr/bin/env perl
 use strict;
 
-my $usage = "perl vb-step3-muscle-alns2cmbuild-hmmbuild-qsub.pl <model list>\n";
-if(scalar(@ARGV) != 1) { die $usage; }
+my $usage = "perl vb-step3-muscle-alns2cmbuild-hmmbuild-qsub.pl <'auto' or 'all' for defining RF columns> <model list>\n";
+if(scalar(@ARGV) != 2) { die $usage; }
 
 my $version = "0.02";
 
-my ($model_root_file) = (@ARGV);
+my $auto_or_all_opt = undef;
+my ($auto_or_all_opt, $model_root_file) = (@ARGV);
+my $do_auto = 0;
+my $do_all  = 0;
+
+if   ($auto_or_all_opt eq "auto") { $do_auto = 1; }
+elsif($auto_or_all_opt eq "all")  { $do_all  = 1; }
+else { die "ERROR can't parse first commandline arg, should be 'auto' or 'all'"; }
+
 my $root = $model_root_file;
 if($root !~ m/\.model\.list$/) { 
   die "ERROR unable to parse model list file name $model_root_file"; 
@@ -64,27 +72,40 @@ while(my $line = <IN>) {
   }
 }
 
-my $build_qsub_file  = $root . ".build.qsub";
+my $out_root = $root; 
+if($do_all) { $out_root .= ".all"; }
+else        { $out_root .= ".auto"; }
+
+my $build_qsub_file  = $out_root . ".build.qsub";
 open(BUILD,  ">", $build_qsub_file)  || die "ERROR unable to open $build_qsub_file for writing";
 
 # for each model: 
 my $nmdl = scalar(@mdl_A);
 for(my $m = 0; $m < $nmdl; $m++) { 
   my $mdl = $mdl_A[$m];
-
+  
   # required input files (we checked that these existed above when we created @mdl_A)
   my $info_file         = $root . "." . $mdl . ".info";
   my $aa_fa_file        = $root . "." . $mdl . ".aa.fa"; 
   my $aa_aln_file       = $root . "." . $mdl . ".aa.afa"; 
+  my $aa_stk_file       = $root . "." . $mdl . ".aa.stk"; 
 
   # output files that we'll create
-  my $source_list       = $root . "." . $mdl . ".source.list";
-  my $source_nt_fa_file = $root . "." . $mdl . ".source.nt.fa";
-  my $nt_fa_file        = $root . "." . $mdl . ".nt.fa";
-  my $map_file          = $root . "." . $mdl . ".map";
-  my $nt_aln_file       = $root . "." . $mdl . ".nt.afa";
-  my $nt_stk_file       = $root . "." . $mdl . ".nt.stk";
-  my $alistat_file      = $root . "." . $mdl . ".alistat";
+  my $source_list       = $out_root . "." . $mdl . ".source.list";
+  my $source_nt_fa_file = $out_root . "." . $mdl . ".source.nt.fa";
+  my $nt_fa_file        = $out_root . "." . $mdl . ".nt.fa";
+  my $map_file          = $out_root . "." . $mdl . ".map";
+  my $nt_aln_file       = $out_root . "." . $mdl . ".nt.afa";
+  my $nt_mask_file      = $out_root . "." . $mdl . ".nt.mask";
+  my $nt_stk_file       = $out_root . "." . $mdl . ".nt.stk";
+  my $alistat_file      = $out_root . "." . $mdl . ".alistat";
+
+  my $cm_root            = $out_root . "." . $mdl;
+  my $hmm_root           = $cm_root;
+  my $hmm_file_name      = $hmm_root . ".hmm.tmp";
+  my $hmmbuild_file_name = $hmm_root . ".hmmbuild.tmp";
+  my $hmmbuild_O_stk     = $hmm_root . ".hmmbuild.stk";
+  my $hmmbuild_O_afa     = $hmm_root . ".hmmbuild.afa";
 
   # create list of 'source' nt accessions
   $cmd = "perl $scripts_dir/parse-by-source.pl $info_file | sort | uniq > $source_list";
@@ -102,12 +123,35 @@ for(my $m = 0; $m < $nmdl; $m++) {
   $cmd = "perl $scripts_dir/fetch-given-info.pl $info_file $source_nt_fa_file $nt_fa_file $map_file";
   RunCommand($cmd, 1);
 
-  # create a nucleotide alignment by translating the protein alignment in place
-  $cmd = "perl $scripts_dir/aa-to-nt-alignment.pl $aa_aln_file $aa_fa_file $nt_fa_file $map_file > $nt_aln_file";
+  # build an HMM, saving the RF annotated output alignment
+  my $hmm_name = $root . "." . $mdl;
+  my $symfrac_opt = ($do_all) ? " --symfrac 0.0 " : "";
+  $cmd = "$hmmer_dir/hmmbuild $symfrac_opt -O $hmmbuild_O_stk -n $hmm_name $hmm_file_name $aa_aln_file > $hmmbuild_file_name";
   RunCommand($cmd, 1);
-  
-  # reformat the nucleotide alignment to stockholm format
-  $cmd = "$easel_dir/esl-reformat stockholm $nt_aln_file > $nt_stk_file";
+
+  # covert the hmmbuild RF line to a mask file for the nt alignment
+  my $hmmbuild_rf_file = $hmm_root . ".rf.txt";
+  # the 'head -c -1' part removes the newline that would normally go at the end
+  $cmd = "$easel_dir/esl-reformat pfam $hmmbuild_O_stk | grep \"^\#=GC RF\" | awk '{ print \$3 }' | sed 's/\\./000/g' | sed 's/x/111/g' | head -c -1 - > $nt_mask_file";
+  RunCommand($cmd, 1);
+  $cmd = "echo 111 >> $nt_mask_file";
+  RunCommand($cmd, 1);
+
+  # determine the number of '1's in the mask file
+  my $nt_clen = `cat $nt_mask_file | sed 's/0//g' | wc | awk '{ print \$3 }'`;
+  chomp $nt_clen;
+  $nt_clen--; # $nt_clen will include the newline
+
+  # create a nucleotide alignment by translating the protein alignment in place
+  # use the hmmbuild output alignment so we can set the nucleotide alignment RF appropriately via $nt_mask_file
+  # but first we need to conver that to aligned fasta
+  $cmd = "$easel_dir/esl-reformat afa $hmmbuild_O_stk > $hmmbuild_O_afa";
+  RunCommand($cmd, 1);
+  $cmd = "perl $scripts_dir/aa-to-nt-alignment.pl $hmmbuild_O_afa $aa_fa_file $nt_fa_file $map_file > $nt_aln_file";
+  RunCommand($cmd, 1);
+
+  # reformat the nucleotide alignment to stockholm format, and add the RF line using the mask
+  $cmd = "$easel_dir/esl-reformat pfam $nt_aln_file | esl-alimanip --mask2rf $nt_mask_file - > $nt_stk_file";
   RunCommand($cmd, 1);
 
   # get stats on the alignment
@@ -122,10 +166,10 @@ for(my $m = 0; $m < $nmdl; $m++) {
 
   my $i;
   for($i = 0; $i < $nere; $i++) { 
-    my $cm_root = $cm_name . "." . $ere_name_A[$i];
+    my $cm_root = $out_root . "." . $mdl . "." . $ere_name_A[$i];
     my $cm_file_name = $cm_root . ".vadr.cm";
     my $cmbuild_file_name = $cm_root . ".vadr.cmbuild";
-    my $cmbuild_cmd = "$infernal_dir/cmbuild -F -n $cm_name --emaxseq 100000 --noss --ere $ere_opt_A[$i] $cm_file_name $nt_stk_file > $cmbuild_file_name";
+    my $cmbuild_cmd = "$infernal_dir/cmbuild --hand -F -n $cm_name --emaxseq 100000 --noss --ere $ere_opt_A[$i] $cm_file_name $nt_stk_file > $cmbuild_file_name";
     printf BUILD ("qsub -N $cm_root -b y -v SGE_FACILITIES -P unified -S /bin/bash -cwd -V -j n -o /dev/null -e $cm_root.err -l m_mem_free=8G,h_rt=2880000,mem_free=8G,h_vmem=8G -m n \"$cmbuild_cmd\"\n");
   }
 
@@ -134,19 +178,19 @@ for(my $m = 0; $m < $nmdl; $m++) {
   @ere_name_A = ("0p1", "0p2", "0p3", "0p4", "0p5", "0p59", "0p7", "0p8", "0p9", "1p0", "1p1", "1p2");
   $nere = scalar(@ere_opt_A);
 
-  my $hmm_name = $cm_name;
+  my $hmm_name = $root . "." . $mdl . "/1.." . $nt_clen . ":+";
   for($i = 0; $i < $nere; $i++) {
-    my $hmm_root = $hmm_name . "." . $ere_name_A[$i];
+    my $hmm_root = $out_root . "." . $mdl . "." . $ere_name_A[$i];
     my $hmm_file_name = $hmm_root . ".vadr.hmm";
     my $hmmbuild_file_name = $hmm_root . ".vadr.hmmbuild";
-    my $hmmbuild_cmd = "$hmmer_dir/hmmbuild --ere $ere_opt_A[$i] -n $hmm_name $hmm_file_name $aa_aln_file > $hmmbuild_file_name";
+    my $hmmbuild_cmd = "$hmmer_dir/hmmbuild --hand --ere $ere_opt_A[$i] -n $hmm_name $hmm_file_name $hmmbuild_O_stk > $hmmbuild_file_name";
     printf BUILD ("qsub -N $hmm_root.hmm -b y -v SGE_FACILITIES -P unified -S /bin/bash -cwd -V -j n -o /dev/null -e $hmm_root.hmm.err -l m_mem_free=8G,h_rt=2880000,mem_free=8G,h_vmem=8G -m n \"$hmmbuild_cmd\"\n");
   }
 }
 close(BUILD);
 printf("\nScript to submit $nmdl cmbuild and hmmbuild jobs to the farm is in:\n$build_qsub_file\n");
 printf("\nRun that script, wait for all jobs to finish, then run:\n");
-printf("perl \$VADRBUILDTOOLSDIR/vb-step4-create-vadr-files.pl $model_root_file <name of vadr model dir to create> <gene value (use _ for space) <product value (use _ for space)>\n");
+printf("perl \$VADRBUILDTOOLSDIR/vb-step4-create-vadr-files.pl $auto_or_all_opt $model_root_file <name of vadr model dir to create> <gene value (use _ for space) <product value (use _ for space)>\n");
 
 
 #################################################################
