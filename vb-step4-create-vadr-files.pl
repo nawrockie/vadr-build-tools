@@ -1,17 +1,30 @@
 #!/usr/bin/env perl
 use strict;
 
-my $usage = "perl vb-step4-create-vadr-files.pl <model list> <name of vadr model dir to create> <gene value (use _ for space)> <product value (use _ for space)>\n";
-if(scalar(@ARGV) != 4) { die $usage; }
+my $usage = "perl vb-step4-create-vadr-files.pl <'auto' or 'all'> <model list> <name of vadr model dir to create> <gene value (use _ for space)> <product value (use _ for space)>\n";
+if(scalar(@ARGV) != 5) { die $usage; }
 
 my $version = "0.02";
 
-my ($model_root_file, $vadr_model_dir, $gene, $product) = (@ARGV);
+my $auto_or_all_opt = undef;
+my ($auto_or_all_opt, $model_root_file) = (@ARGV);
+my $do_auto = 0;
+my $do_all  = 0;
+
+my ($auto_or_all_opt, $model_root_file, $vadr_model_dir, $gene, $product) = (@ARGV);
 my $root = $model_root_file;
 if($root !~ m/\.model\.list$/) { 
   die "ERROR unable to parse model list file name $model_root_file"; 
 }
 $root =~ s/\.model\.list$//;
+
+if   ($auto_or_all_opt eq "auto") { $do_auto = 1; }
+elsif($auto_or_all_opt eq "all")  { $do_all  = 1; }
+else { die "ERROR can't parse first commandline arg, should be 'auto' or 'all'"; }
+
+my $out_root = $root; 
+if($do_all) { $out_root .= ".all"; }
+else        { $out_root .= ".auto"; }
 
 $gene =~ s/\_/ /g;
 $product =~ s/\_/ /g;
@@ -34,14 +47,30 @@ if(! exists($ENV{"VADRBLASTDIR"})) {
 if(! (-d $ENV{"VADRBLASTDIR"})) { 
   die "ERROR, the directory specified by your environment variable VADRBLASTDIR does not exist.\n"; 
 }    
+if(! exists($ENV{"VADRINFERNALDIR"})) { 
+  die "ERROR, the environment variable VADRINFERNALDIR is not set";
+}
+if(! (-d $ENV{"VADRINFERNALDIR"})) { 
+  die "ERROR, the directory specifiedy by your environment variable VADRINFERNALDIR is not set";
+}
+if(! exists($ENV{"VADRHMMERDIR"})) { 
+  die "ERROR, the environment variable VADRHMMERDIR is not set";
+}
+if(! (-d $ENV{"VADRHMMERDIR"})) { 
+  die "ERROR, the directory specified by your environment variable VADRHMMERDIR does not exist.\n"; 
+}    
 
 my $scripts_dir = $ENV{"VADRBUILDTOOLSDIR"} . "/scripts";
 my $easel_dir = $ENV{"VADREASELDIR"};
 my $blast_dir = $ENV{"VADRBLASTDIR"};
+my $hmmer_dir = $ENV{"VADRHMMERDIR"};
+my $infernal_dir = $ENV{"VADRINFERNALDIR"};
 
 if(! exists($ENV{"VADRINSTALLDIR"})) { die "ERROR the environment variable VADRINSTALLDIR is not set"; }
-my $cmpress_path = $ENV{"VADRINSTALLDIR"} . "/infernal-dev/src/cmpress";
-if(! -s $cmpress_path) { die "ERROR cmpress does not exist at $cmpress_path"; }
+my $cmpress_path = $infernal_dir . "/cmpress";
+my $hmmpress_path = $hmmer_dir . "/hmmpress";
+if(! -s $hmmpress_path) { die "ERROR hmmpress does not exist at $hmmpress_path"; }
+if(! -s $cmpress_path)  { die "ERROR cmpress does not exist at $cmpress_path"; }
 
 my $cmd;
 my $line;
@@ -68,7 +97,19 @@ while($line = <IN>) {
   my $cm_file_name = $cm_name . ".1p0" . ".vadr.cm";
   my $mdl_aa_fa_file = $root . "." . $mdl . ".aa.fa"; 
 
-  my @reqd_files_A = ($mdl_info_file, $cm_file_name, $mdl_aa_fa_file);
+  my @hmm_ere_opt_A  = ("0.1", "0.2", "0.3", "0.4", "0.5", "0.59", "0.7", "0.8", "0.9", "1.0", "1.1", "1.2");
+  my @hmm_ere_name_A = ("0p1", "0p2", "0p3", "0p4", "0p5", "0p59", "0p7", "0p8", "0p9", "1p0", "1p1", "1p2");
+  my $nhmm_ere = scalar(@hmm_ere_opt_A);
+
+  my @hmm_file_name_A = ();
+  my $i;
+  for($i = 0; $i < $nhmm_ere; $i++) {
+    my $hmm_root = $out_root . "." . $mdl . "." . $hmm_ere_name_A[$i];
+    my $hmm_file_name = $hmm_root . ".vadr.hmm";
+    push(@hmm_file_name_A, $hmm_file_name);
+  }
+
+  my @reqd_files_A = ($mdl_info_file, $cm_file_name, $mdl_aa_fa_file, @hmm_file_name_A);
   foreach my $reqd_file (@reqd_files_A) { 
     if(! -e $reqd_file) { die "ERROR required file $reqd_file does not exist. Did you (succesfully) run vb-step2-taxinfo2muscle-qsub.pl?"; }
     if(! -s $reqd_file) { die "ERROR required file $reqd_file exists but is empty. Did you (succesfully) run vb-step2-taxinfo2muscle-qsub.pl?"; }
@@ -127,18 +168,15 @@ system("$cmd");
 
 # concatenate all the CM files together and press them
 # make qsub commands for building the models
-#my @ere_opt_A  = ("0.6", "0.7", "0.8", "0.9", "1.0", "1.1", "1.2", "1.3", "1.4");
-#my @ere_name_A = ("0p6", "0p7", "0p8", "0p9", "1p0", "1p1", "1p2", "1p3", "1p4");
-my @ere_opt_A  = ("1.0");
-my @ere_name_A = ("1p0");
-my $nere = scalar(@ere_opt_A);
-for(my $i = 0; $i < $nere; $i++) { 
+my @cm_ere_opt_A  = ("1.0");
+my @cm_ere_name_A = ("1p0");
+my $ncm_ere = scalar(@cm_ere_opt_A);
+for(my $i = 0; $i < $ncm_ere; $i++) { 
   my $cat_cmd = "cat ";
-  my $ere = $ere_name_A[$i];
-  my $big_cm_file_name = "vadr." . $root . "." . $ere . ".cm";
+  my $cm_ere = $cm_ere_name_A[$i];
+  my $big_cm_file_name = "vadr." . $root . "." . $cm_ere . ".cm";
   for($m = 0; $m < $nmdl; $m++) { 
-    my $cm_name = 
-    my $cm_file_name = $root . "." . $mdl_A[$m] . "." . $ere . ".vadr.cm";
+    my $cm_file_name = $root . "." . $mdl_A[$m] . "." . $cm_ere . ".vadr.cm";
     $cat_cmd .= " " . $cm_file_name;
   }
   $cat_cmd .= " > $big_cm_file_name";
@@ -149,6 +187,29 @@ for(my $i = 0; $i < $nere; $i++) {
 
   # move to the new dir
   $cmd = "mv $big_cm_file_name* $vadr_model_dir";
+  RunCommand($cmd, 1);
+}
+
+# concatenate all the HMM files together and press them
+my @hmm_ere_opt_A  = ("0.1", "0.2", "0.3", "0.4", "0.5", "0.59", "0.7", "0.8", "0.9", "1.0", "1.1", "1.2");
+my @hmm_ere_name_A = ("0p1", "0p2", "0p3", "0p4", "0p5", "0p59", "0p7", "0p8", "0p9", "1p0", "1p1", "1p2");
+my $nhmm_ere = scalar(@hmm_ere_opt_A);
+for(my $i = 0; $i < $nhmm_ere; $i++) { 
+  my $cat_cmd = "cat ";
+  my $hmm_ere = $hmm_ere_name_A[$i];
+  my $big_hmm_file_name = "vadr." . $root . "." . $hmm_ere . ".hmm";
+  for($m = 0; $m < $nmdl; $m++) { 
+    my $hmm_file_name = $root . "." . $mdl_A[$m] . "." . $hmm_ere . ".vadr.hmm";
+    $cat_cmd .= " " . $hmm_file_name;
+  }
+  $cat_cmd .= " > $big_hmm_file_name";
+  RunCommand($cat_cmd, 1);
+
+  $cmd = "$hmmpress_path $big_hmm_file_name > /dev/null";
+  RunCommand($cmd, 1);
+
+  # move to the new dir
+  $cmd = "mv $big_hmm_file_name* $vadr_model_dir";
   RunCommand($cmd, 1);
 }
 
