@@ -120,7 +120,8 @@ for(my $m = 0; $m < $nmdl; $m++) {
   my @ere_name_A = ("1p0");
   my $nere = scalar(@ere_opt_A);
 
-  for(my $i = 0; $i < $nere; $i++) { 
+  my $i;
+  for($i = 0; $i < $nere; $i++) { 
     my $cm_root = $cm_name . "." . $ere_name_A[$i];
     my $cm_file_name = $cm_root . ".vadr.cm";
     my $cmbuild_file_name = $cm_root . ".vadr.cmbuild";
