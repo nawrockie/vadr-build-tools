@@ -202,7 +202,7 @@ source ~/.cshrc
    will submit the 'cmbuild' jobs to create the CM files for VADR.
    
    Example command:
-   $ perl $VADRBUILDTOOLSDIR/vb-step3-muscle-alns2cmbuild-hmmbuild-qsub.pl cytb.model.list > step3.out 
+   $ perl $VADRBUILDTOOLSDIR/vb-step3-muscle-alns2cmbuild-hmmbuild-qsub.pl auto cytb.model.list > step3.out 
 
    You may see some output like this:
    SKIPPING nt_len < 3*M     (nt NC_012447.1/3518-4638: 1121 aa YP_002790679.1: 374)
@@ -219,7 +219,7 @@ source ~/.cshrc
    cytb.build.qsub
 
    Run that script, wait for all jobs to finish, then run:
-   perl $VADRBUILDTOOLSDIR/vb-step4-create-vadr-files.pl cytb.model.list <name of vadr model dir to create> <gene value (use _ for space) <product value (use _ for space)>
+   perl $VADRBUILDTOOLSDIR/vb-step4-create-vadr-files.pl auto cytb.model.list <name of vadr model dir to create> <gene value (use _ for space) <product value (use _ for space)>
    ~~~~~~~~~~~~~~~~~~
 
    Run the script that submits the cmbuild jobs:
@@ -236,7 +236,7 @@ source ~/.cshrc
    VADR: 
 
    Example command:
-   $ perl $VADRBUILDTOOLSDIR/vb-step4-create-vadr-files.pl cytb.model.list vadr-cytb-i0-models-0.991.1-dir CYTB cytochrome_b > step4.out 
+   $ perl $VADRBUILDTOOLSDIR/vb-step4-create-vadr-files.pl auto cytb.model.list vadr-cytb-i0-models-0.991.1-dir CYTB cytochrome_b > step4.out 
    
    This will create a directory called vadr-cytb-i0-models-0.991.1-dir
    with all the files you need to run VADR on cytb sequences. 
