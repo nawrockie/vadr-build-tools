@@ -1,7 +1,7 @@
 #!/usr/bin/env perl
 use strict;
 
-my $usage = "perl vb-step3-muscle-alns2cmbuild-qsub.pl <model list>\n";
+my $usage = "perl vb-step3-muscle-alns2cmbuild-hmmbuild-qsub.pl <model list>\n";
 if(scalar(@ARGV) != 1) { die $usage; }
 
 my $version = "0.02";
@@ -129,12 +129,18 @@ for(my $m = 0; $m < $nmdl; $m++) {
   }
 
   # build HMM
+  @ere_opt_A  = ("0.1", "0.2", "0.3", "0.4", "0.5", "0.6", "0.7", "0.8", "0.9", "1.0", "1.1", "1.2");
+  @ere_name_A = ("0p1", "0p2", "0p3", "0p4", "0p5", "0p6", "0p7", "0p8", "0p9", "1p0", "1p1", "1p2");
+  $nere = scalar(@ere_opt_A);
+
   my $hmm_name = $cm_name;
-  my $hmm_root = $hmm_name;
-  my $hmm_file_name = $hmm_root . ".vadr.hmm";
-  my $hmmbuild_file_name = $hmm_root . ".vadr.hmmbuild";
-  my $hmmbuild_cmd = "$hmmer_dir/hmmbuild -n $hmm_name $hmm_file_name $aa_aln_file > $hmmbuild_file_name";
-  printf BUILD ("qsub -N $hmm_root.hmm -b y -v SGE_FACILITIES -P unified -S /bin/bash -cwd -V -j n -o /dev/null -e $hmm_root.hmm.err -l m_mem_free=8G,h_rt=2880000,mem_free=8G,h_vmem=8G -m n \"$hmmbuild_cmd\"\n");
+  for($i = 0; $i < $nere; $i++) {
+    my $hmm_root = $hmm_name . "." . $ere_name_A[$i];
+    my $hmm_file_name = $hmm_root . ".vadr.hmm";
+    my $hmmbuild_file_name = $hmm_root . ".vadr.hmmbuild";
+    my $hmmbuild_cmd = "$hmmer_dir/hmmbuild --ere $ere_opt_A[$i] -n $hmm_name $hmm_file_name $aa_aln_file > $hmmbuild_file_name";
+    printf BUILD ("qsub -N $hmm_root.hmm -b y -v SGE_FACILITIES -P unified -S /bin/bash -cwd -V -j n -o /dev/null -e $hmm_root.hmm.err -l m_mem_free=8G,h_rt=2880000,mem_free=8G,h_vmem=8G -m n \"$hmmbuild_cmd\"\n");
+  }
 }
 close(BUILD);
 printf("\nScript to submit $nmdl cmbuild and hmmbuild jobs to the farm is in:\n$build_qsub_file\n");
