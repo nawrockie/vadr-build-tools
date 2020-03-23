@@ -33,12 +33,12 @@ if(! exists($ENV{"VADREASELDIR"})) {
 if(! (-d $ENV{"VADREASELDIR"})) { 
   die "ERROR, the directory specified by your environment variable VADREASELDIR does not exist.\n"; 
 }    
-if(! exists($ENV{"VADRINFERNALDEVDIR"})) { 
-  die "ERROR, the environment variable VADRINFERNALDEVDIR is not set";
+if(! exists($ENV{"VADRINFERNALDIR"})) { 
+  die "ERROR, the environment variable VADRINFERNALDIR is not set";
 }
-if(! (-d $ENV{"VADRINFERNALDEVDIR"})) { 
-  die "ERROR, the directory specified by your environment variable VADRINFERNALDEVDIR does not exist.\n"; 
-}    
+if(! (-d ($ENV{"VADRINFERNALDIR"})) { 
+  die "ERROR, the directory specifiedy by your environment variable VADRINFERNALDIR is not set";
+}
 if(! exists($ENV{"VADRHMMERDIR"})) { 
   die "ERROR, the environment variable VADRHMMERDIR is not set";
 }
@@ -48,7 +48,7 @@ if(! (-d $ENV{"VADRHMMERDIR"})) {
 
 my $scripts_dir  = $ENV{"VADRBUILDTOOLSDIR"} . "/scripts";
 my $easel_dir    = $ENV{"VADREASELDIR"};
-my $infernal_dir = $ENV{"VADRINFERNALDEVDIR"};
+my $infernal_dir = $ENV{"VADRINFERNALDIR"};
 my $hmmer_dir    = $ENV{"VADRHMMERDIR"};
 my $cmd;
 
