@@ -1,4 +1,6 @@
 EPN, Mon Sep  9 14:23:33 2019
+vadr-build-tools v0.02
+https://github.com/nawrockie/vadr-build-tools
 
 Outline of vadr-model-build procedure for marker genes.
 
@@ -27,7 +29,8 @@ If you are using the bash shell, add the following
 lines to the '.bashrc' file in your home directory:
 
 export VADRBUILDTOOLSDIR=<path to current directory (created by git clone command above)>
-export VADRINFERNALDEVDIR=/panfs/pan1/infernal/notebook/19_0905_inf_cmbuild_eforce/infernal/src
+export VADRINFERNALDEVDIR=/panfs/pan1/dnaorg/virseqannot/code/vadr-install/infernal/binaries
+export VADRHMMERDIR=~nawrocke/src/hmmer-3.3/src
 
 After adding the export lines to your .bashrc file, source that file
 to update your current environment with the command:
@@ -39,7 +42,8 @@ If you are using the C shell, add the following
 lines to the '.cshrc' file in your home directory:
 
 setenv VADRBUILDTOOLSDIR <path to current directory (created by git clone command above)>
-setenv VADRINFERNALDEVDIR /panfs/pan1/infernal/notebook/19_0905_inf_cmbuild_eforce/infernal/src
+setenv VADRINFERNALDEVDIR /panfs/pan1/dnaorg/virseqannot/code/vadr-install/infernal/binaries
+setenv VADRHMMERDIR ~nawrocke/src/hmmer-3.3/src
 
 After adding the setenv lines to your .cshrc file, source that file
 to update your current environment with the command:
@@ -198,7 +202,7 @@ source ~/.cshrc
    will submit the 'cmbuild' jobs to create the CM files for VADR.
    
    Example command:
-   $ perl $VADRBUILDTOOLSDIR/vb-step3-muscle-alns2cmbuild-qsub.pl cytb.model.list > step3.out 
+   $ perl $VADRBUILDTOOLSDIR/vb-step3-muscle-alns2cmbuild-hmmbuild-qsub.pl auto cytb.model.list > step3.out 
 
    You may see some output like this:
    SKIPPING nt_len < 3*M     (nt NC_012447.1/3518-4638: 1121 aa YP_002790679.1: 374)
@@ -211,11 +215,11 @@ source ~/.cshrc
    
    $ tail -n 5 step3.out
    ~~~~~~~~~~~~~~~~~~
-   Script to submit 49 cmbuild jobs to the farm is in:
-   cytb.cmbuild.qsub
+   Script to submit 49 cmbuild and hmmbuild jobs to the farm is in:
+   cytb.build.qsub
 
    Run that script, wait for all jobs to finish, then run:
-   perl $VADRBUILDTOOLSDIR/vb-step4-create-vadr-files.pl cytb.model.list <name of vadr model dir to create> <gene value (use _ for space) <product value (use _ for space)>
+   perl $VADRBUILDTOOLSDIR/vb-step4-create-vadr-files.pl auto cytb.model.list <name of vadr model dir to create> <gene value (use _ for space) <product value (use _ for space)>
    ~~~~~~~~~~~~~~~~~~
 
    Run the script that submits the cmbuild jobs:
@@ -232,7 +236,7 @@ source ~/.cshrc
    VADR: 
 
    Example command:
-   $ perl $VADRBUILDTOOLSDIR/vb-step4-create-vadr-files.pl cytb.model.list vadr-cytb-i0-models-0.991.1-dir CYTB cytochrome_b > step4.out 
+   $ perl $VADRBUILDTOOLSDIR/vb-step4-create-vadr-files.pl auto cytb.model.list vadr-cytb-i0-models-0.991.1-dir CYTB cytochrome_b > step4.out 
    
    This will create a directory called vadr-cytb-i0-models-0.991.1-dir
    with all the files you need to run VADR on cytb sequences. 

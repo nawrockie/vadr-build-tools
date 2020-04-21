@@ -4,6 +4,8 @@ use strict;
 my $usage = "perl vb-step2-taxinfo2muscle-qsub.pl <protein fasta file> <tax-split file> <output root>\n";
 if(scalar(@ARGV) != 3) { die $usage; }
 
+my $version = "0.02";
+
 my ($fa_file, $taxsplit_file, $root) = (@ARGV);
 my $cmd;
 my $line;
