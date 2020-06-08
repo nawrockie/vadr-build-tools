@@ -67,10 +67,17 @@ my $hmmer_dir = $ENV{"VADRHMMERDIR"};
 my $infernal_dir = $ENV{"VADRINFERNALDIR"};
 
 if(! exists($ENV{"VADRINSTALLDIR"})) { die "ERROR the environment variable VADRINSTALLDIR is not set"; }
+
 my $cmpress_path = $infernal_dir . "/cmpress";
+my $cmemit_path = $infernal_dir . "/cmemit";
 my $hmmpress_path = $hmmer_dir . "/hmmpress";
-if(! -s $hmmpress_path) { die "ERROR hmmpress does not exist at $hmmpress_path"; }
-if(! -s $cmpress_path)  { die "ERROR cmpress does not exist at $cmpress_path"; }
+my $reformat_path = $easel_dir . "/esl-reformat";
+my $makeblastdb_path = $blast_dir . "/makeblastdb";
+
+if(! -s $hmmpress_path)  { die "ERROR hmmpress does not exist at $hmmpress_path"; }
+if(! -s $cmpress_path)   { die "ERROR cmpress does not exist at $cmpress_path"; }
+if(! -s $cmemit_path)    { die "ERROR cmemit does not exist at $cmemit_path"; }
+if(! -s $reformat_path)  { die "ERROR reformat does not exist at $reformat_path"; }
 
 my $cmd;
 my $line;
@@ -167,7 +174,7 @@ my $cmd = "mv $vadr_minfo_file $vadr_model_dir";
 system("$cmd");
 
 # concatenate all the CM files together and press them
-# make qsub commands for building the models
+# cmemit the consensus sequence, convert to dna and make a blastn db 
 my @cm_ere_opt_A  = ("1.0");
 my @cm_ere_name_A = ("1p0");
 my $ncm_ere = scalar(@cm_ere_opt_A);
@@ -175,6 +182,7 @@ for(my $i = 0; $i < $ncm_ere; $i++) {
   my $cat_cmd = "cat ";
   my $cm_ere = $cm_ere_name_A[$i];
   my $big_cm_file_name = $root . "." . $cm_ere . ".cm";
+  my $blastn_db_file_name = $root . "." . $cm_ere . ".fa";
   for($m = 0; $m < $nmdl; $m++) { 
     my $cm_file_name = $out_root . "." . $mdl_A[$m] . "." . $cm_ere . ".vadr.cm";
     $cat_cmd .= " " . $cm_file_name;
@@ -185,9 +193,20 @@ for(my $i = 0; $i < $ncm_ere; $i++) {
   $cmd = "$cmpress_path $big_cm_file_name > /dev/null";
   RunCommand($cmd, 1);
 
+  $cmd = "$cmemit_path -c $big_cm_file_name | sed 's/-hmmconsensus//' | sed 's/-cmconsensus//' | $reformat_path -d fasta - > $blastn_db_file_name";
+  RunCommand($cmd, 1);
+
+  # run makeblastdb
+  $cmd = "$makeblastdb_path -in $blastn_db_file_name -dbtype nucl";
+  RunCommand($cmd, 1);
+  
   # move to the new dir
   $cmd = "mv $big_cm_file_name* $vadr_model_dir";
   RunCommand($cmd, 1);
+
+  $cmd = "mv $blastn_db_file_name* $vadr_model_dir";
+  RunCommand($cmd, 1);
+
 }
 
 # concatenate all the HMM files together and press them
