@@ -93,7 +93,7 @@ while($line = <IN>) {
   push(@mdl_info_file_A, $mdl_info_file);
 
   # make sure all the files we require exist and are non-empty
-  my $cm_name = $root . "." . $mdl;
+  my $cm_name = $out_root . "." . $mdl;
   my $cm_file_name = $cm_name . ".1p0" . ".vadr.cm";
   my $mdl_aa_fa_file = $root . "." . $mdl . ".aa.fa"; 
 
@@ -120,7 +120,7 @@ while($line = <IN>) {
 my $nmdl = scalar(@mdl_A);
 my $m;
 
-my $vadr_minfo_file = "vadr." . $root . ".minfo";
+my $vadr_minfo_file = $root . ".minfo";
 open(MINFO, ">", $vadr_minfo_file) || die "ERROR unable to open $vadr_minfo_file for writing";
 
 for($m = 0; $m < $nmdl; $m++) { 
@@ -137,7 +137,7 @@ for($m = 0; $m < $nmdl; $m++) {
   my $mdl_info_file = $mdl_info_file_A[$m];
   my $mdl_aa_fa_file = $root . "." . $mdl . ".aa.fa"; 
 
-  my $cm_and_hmm_name  = $root . "." . $mdl;
+  my $cm_and_hmm_name  = $out_root . "." . $mdl;
   my $cm_file_name  = $cm_and_hmm_name . ".1p0" . ".vadr.cm";
   my $hmm_file_name = $cm_and_hmm_name . "vadr.hmm";
 
@@ -174,9 +174,9 @@ my $ncm_ere = scalar(@cm_ere_opt_A);
 for(my $i = 0; $i < $ncm_ere; $i++) { 
   my $cat_cmd = "cat ";
   my $cm_ere = $cm_ere_name_A[$i];
-  my $big_cm_file_name = "vadr." . $root . "." . $cm_ere . ".cm";
+  my $big_cm_file_name = $root . "." . $cm_ere . ".cm";
   for($m = 0; $m < $nmdl; $m++) { 
-    my $cm_file_name = $root . "." . $mdl_A[$m] . "." . $cm_ere . ".vadr.cm";
+    my $cm_file_name = $out_root . "." . $mdl_A[$m] . "." . $cm_ere . ".vadr.cm";
     $cat_cmd .= " " . $cm_file_name;
   }
   $cat_cmd .= " > $big_cm_file_name";
@@ -197,9 +197,9 @@ my $nhmm_ere = scalar(@hmm_ere_opt_A);
 for(my $i = 0; $i < $nhmm_ere; $i++) { 
   my $cat_cmd = "cat ";
   my $hmm_ere = $hmm_ere_name_A[$i];
-  my $big_hmm_file_name = "vadr." . $root . "." . $hmm_ere . ".hmm";
+  my $big_hmm_file_name = $root . "." . $hmm_ere . ".hmm";
   for($m = 0; $m < $nmdl; $m++) { 
-    my $hmm_file_name = $root . "." . $mdl_A[$m] . "." . $hmm_ere . ".vadr.hmm";
+    my $hmm_file_name = $out_root . "." . $mdl_A[$m] . "." . $hmm_ere . ".vadr.hmm";
     $cat_cmd .= " " . $hmm_file_name;
   }
   $cat_cmd .= " > $big_hmm_file_name";
