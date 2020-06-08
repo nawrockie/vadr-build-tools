@@ -36,8 +36,8 @@ if(! (-d $ENV{"VADREASELDIR"})) {
 if(! exists($ENV{"VADRINFERNALDIR"})) { 
   die "ERROR, the environment variable VADRINFERNALDIR is not set";
 }
-if(! (-d ($ENV{"VADRINFERNALDIR"})) { 
-  die "ERROR, the directory specifiedy by your environment variable VADRINFERNALDIR is not set";
+if(! (-d ($ENV{"VADRINFERNALDIR"}))) { 
+  die "ERROR, the directory specified by your environment variable VADRINFERNALDIR is not set";
 }
 if(! exists($ENV{"VADRHMMERDIR"})) { 
   die "ERROR, the environment variable VADRHMMERDIR is not set";

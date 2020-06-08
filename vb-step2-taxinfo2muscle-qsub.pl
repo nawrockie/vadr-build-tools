@@ -152,7 +152,7 @@ if($nseq4 != $nseq3) {
   die "ERROR, the $nmdl translation_table/taxonomic_group models only comprise $nseq4 of the $nseq3 files in $info2_file\nYou need to specify additional taxonomic groups in $taxsplit_file";
 }
 printf("\nScript to submit $nmdl muscle jobs to the farm is in:\n$muscle_qsub_file\n");
-printf("\nRun that script, wait for all jobs to finish, then run:\n\$VADRBUILDTOOLSDIR/vb-step3-muscle-alns2cmbuild-hmmbuild-qsub.pl $model_root_file\n");
+printf("\nRun that script, wait for all jobs to finish, then run:\n\$VADRBUILDTOOLSDIR/vb-step3-muscle-alns2cmbuild-hmmbuild-qsub.pl auto $model_root_file\n");
   
 #########################################################
 
