@@ -168,6 +168,16 @@ for($m = 0; $m < $nmdl; $m++) {
   # move to the new dir
   my $cmd = "mv $blast_db_dst_file* $vadr_model_dir";
   system("$cmd");
+
+  # copy alignments to the new dir
+  my $nt_stk_src_file = $out_root . "." . $mdl . ".nt.stk";
+  my $aa_stk_src_file = $out_root . "." . $mdl . ".hmmbuild.aa.stk";
+  my $nt_stk_dst_file = $root . "." . $mdl . ".nt.stk";
+  my $aa_stk_dst_file = $root . "." . $mdl . ".hmmbuild.aa.stk";
+  my $cmd = "cp $nt_stk_src_file $vadr_model_dir/$nt_stk_dst_file";
+  system("$cmd");
+  my $cmd = "cp $aa_stk_src_file $vadr_model_dir/$aa_stk_dst_file";
+  system("$cmd");
 }
 close(MINFO);
 my $cmd = "mv $vadr_minfo_file $vadr_model_dir";
