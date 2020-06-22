@@ -1,6 +1,6 @@
 use strict;
 
-my $usage = "perl aa-to-nt-alignment.pl <aa afa alignment file> <aa fa unaligned <nt fa unaligned file> <map file>\n";
+my $usage = "perl aa-to-nt-alignment.pl <aa afa alignment file> <aa fa unaligned> <nt fa unaligned file> <map file>\n";
 if(scalar(@ARGV) != 4) { die $usage; }
 
 my ($aa_aln_file, $aa_unaln_file, $nt_unaln_file, $map_file) = (@ARGV);
@@ -133,7 +133,7 @@ while($line = <AA>) {
       my @aa_seq_A = split("", $line); 
       my $alen = scalar(@aa_seq_A);
       for(my $i = 0; $i < $alen; $i++) { 
-        if($aa_seq_A[$i] eq "-") { 
+        if(($aa_seq_A[$i] eq "-") || ($aa_seq_A[$i] eq ".")) { 
           print "---"; 
         }
         else { 

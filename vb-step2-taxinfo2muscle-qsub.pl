@@ -1,10 +1,12 @@
 #!/usr/bin/env perl
 use strict;
 
-my $usage = "perl vb-step2-taxinfo2muscle-qsub.pl <protein fasta file> <tax-split file> <output root>\n";
-if(scalar(@ARGV) != 3) { die $usage; }
+my $usage = "perl vb-step2-taxinfo2muscle-qsub.pl <tax split file> <output root>\n";
+if(scalar(@ARGV) != 2) { die $usage; }
 
-my ($fa_file, $taxsplit_file, $root) = (@ARGV);
+my $version = "0.03";
+
+my ($taxsplit_file, $root) = (@ARGV);
 my $cmd;
 my $line;
 
@@ -35,22 +37,47 @@ foreach my $reqd_file (@reqd_files_A) {
 }
 
 #########################################################
-# parse the taxsplit file
+# parse the tax file
 # top of that file
-## translation_table taxonomy_level prefix
-## tt2: level 7 (mammalia, etc.) 
-#2 7 vertebrata-
-my %taxsplit_level_H = ();
-my %taxsplit_prefix_H = ();
+# Each non-#-prefixed line has 4 whitespace delimited tokens (number
+# of spaces between tokens is irrelevant): 
+# 
+# <tt> <string> <tax_level> <prefix>
+#
+# <tt>         is translation table this line pertains to
+#
+# <string>     if "*" this line pertains to all seqs for <tt> that 
+#              do not match any other <string> values for lines that begin
+#              with <tt>
+#              if not "*", this line pertains to any seq for <tt> that
+#              match the string <string>
+#
+# <tax_level>: taxonomy level at which to split seqs this line pertains
+#              to
+#           
+# <prefix>:    prefix for naming seqs that pertain to this line, "NONE"
+#              for none
+#
+# # tt9: level 3 (platy, hemichordate, echinodermata)
+# 9 *               3 NONE
+# 9 Echinodermata   4 ec-
+# 9 Platyhelminthes 4 pl-
+# 
+my %taxsplit_level_HH = ();
+my %taxsplit_prefix_HH = ();
 open(IN, $taxsplit_file) || die "ERROR unable to open $taxsplit_file for reading";
 while($line = <IN>) { 
   chomp $line;
   if($line !~ m/^#/) { 
     my @el_A = split(/\s+/, $line);
-    if(scalar(@el_A) != 3) { die "ERROR unable to parse line in $taxsplit_file:\n$line\n"; }
-    my ($tt, $level, $prefix) = (@el_A);
-    $taxsplit_level_H{$tt} = $level;
-    $taxsplit_prefix_H{$tt} = $prefix;
+    if(scalar(@el_A) != 4) { die "ERROR unable to parse line in $taxsplit_file:\n$line\n"; }
+    my ($tt, $string, $level, $prefix) = (@el_A);
+    if(! defined $taxsplit_level_HH{$tt}) { 
+      %{$taxsplit_level_HH{$tt}} = ();
+      %{$taxsplit_prefix_HH{$tt}} = ();
+    }
+    $taxsplit_level_HH{$tt}{$string} = $level;
+    $taxsplit_prefix_HH{$tt}{$string} = $prefix;
   }
 }
 close(IN);
@@ -96,11 +123,29 @@ for($i = 0; $i < $ntt; $i++) {
 
   #########################################################
   # split each tt group by taxonomy
-  if(! exists $taxsplit_level_H{$tt})  { die "ERROR did not read taxsplit info from $taxsplit_file for translation table $tt"; }
-  if(! exists $taxsplit_prefix_H{$tt}) { die "ERROR did not read taxsplit info from $taxsplit_file for translation table $tt"; }
-  my $level  = $taxsplit_level_H{$tt};
-  my $prefix = $taxsplit_prefix_H{$tt};
-  $cmd = "perl $scripts_dir/split-by-tax.pl $tt_info_file $level $prefix $root.tt$tt >> $model_root_file ";
+  if(! exists $taxsplit_level_HH{$tt})       { die "ERROR did not read ANY taxsplit info from $taxsplit_file for translation table $tt"; }
+  if(! exists $taxsplit_prefix_HH{$tt})      { die "ERROR did not read ANY taxsplit info from $taxsplit_file for translation table $tt"; }
+  if(! exists $taxsplit_level_HH{$tt}{"*"})  { die "ERROR did not read taxsplit info line with * as <string> (token 2) from $taxsplit_file for translation table $tt"; }
+  if(! exists $taxsplit_prefix_HH{$tt}{"*"}) { die "ERROR did not read taxsplit info line with * as <string> (token 2) from $taxsplit_file for translation table $tt"; }
+  my $df_level  = $taxsplit_level_HH{$tt}{"*"};
+  my $df_prefix = $taxsplit_prefix_HH{$tt}{"*"};
+
+  # check for any other strings
+  my $skip_str = "";
+  foreach my $keep_str (sort keys (%{$taxsplit_level_HH{$tt}})) { 
+    if($keep_str ne "*") { 
+      my $level  = $taxsplit_level_HH{$tt}{$keep_str};
+      my $prefix = $taxsplit_prefix_HH{$tt}{$keep_str};
+      $cmd = "perl $scripts_dir/split-by-tax.pl $tt_info_file $keep_str NONE $level $prefix $root.tt$tt >> $model_root_file ";
+      RunCommand($cmd, 1);
+      if($skip_str ne "") { $skip_str .= ","; }
+      $skip_str .= $keep_str;
+    }
+  }
+  if($skip_str eq "") { $skip_str = "NONE"; }
+
+  # run default 
+  $cmd = "perl $scripts_dir/split-by-tax.pl $tt_info_file NONE $skip_str $df_level $df_prefix $root.tt$tt >> $model_root_file ";
   RunCommand($cmd, 1);
 }
 
@@ -150,7 +195,7 @@ if($nseq4 != $nseq3) {
   die "ERROR, the $nmdl translation_table/taxonomic_group models only comprise $nseq4 of the $nseq3 files in $info2_file\nYou need to specify additional taxonomic groups in $taxsplit_file";
 }
 printf("\nScript to submit $nmdl muscle jobs to the farm is in:\n$muscle_qsub_file\n");
-printf("\nRun that script, wait for all jobs to finish, then run:\n\$VADRBUILDTOOLSDIR/vb-step3-muscle-alns2cmbuild-qsub.pl $model_root_file\n");
+printf("\nRun that script, wait for all jobs to finish, then run:\n\$VADRBUILDTOOLSDIR/vb-step3-muscle-alns2cmbuild-hmmbuild-qsub.pl auto $model_root_file\n");
   
 #########################################################
 
