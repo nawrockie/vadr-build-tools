@@ -136,7 +136,7 @@ for($i = 0; $i < $ntt; $i++) {
     if($keep_str ne "*") { 
       my $level  = $taxsplit_level_HH{$tt}{$keep_str};
       my $prefix = $taxsplit_prefix_HH{$tt}{$keep_str};
-      $cmd = "perl $scripts_dir/local-split-by-tax.pl $tt_info_file $keep_str NONE $level $prefix $root.tt$tt >> $model_root_file ";
+      $cmd = "perl $scripts_dir/split-by-tax.pl $tt_info_file $keep_str NONE $level $prefix $root.tt$tt >> $model_root_file ";
       RunCommand($cmd, 1);
       if($skip_str ne "") { $skip_str .= ","; }
       $skip_str .= $keep_str;
@@ -145,7 +145,7 @@ for($i = 0; $i < $ntt; $i++) {
   if($skip_str eq "") { $skip_str = "NONE"; }
 
   # run default 
-  $cmd = "perl $scripts_dir/local-split-by-tax.pl $tt_info_file NONE $skip_str $df_level $df_prefix $root.tt$tt >> $model_root_file ";
+  $cmd = "perl $scripts_dir/split-by-tax.pl $tt_info_file NONE $skip_str $df_level $df_prefix $root.tt$tt >> $model_root_file ";
   RunCommand($cmd, 1);
 }
 
