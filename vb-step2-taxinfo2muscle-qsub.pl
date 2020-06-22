@@ -4,7 +4,7 @@ use strict;
 my $usage = "perl vb-step2-taxinfo2muscle-qsub.pl <tax split file> <output root>\n";
 if(scalar(@ARGV) != 2) { die $usage; }
 
-my $version = "0.02";
+my $version = "0.03";
 
 my ($taxsplit_file, $root) = (@ARGV);
 my $cmd;

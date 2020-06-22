@@ -1,5 +1,5 @@
-EPN, Mon Sep  9 14:23:33 2019
-vadr-build-tools v0.02
+vadr-build-tools v0.03
+June 2020
 https://github.com/nawrockie/vadr-build-tools
 
 Outline of vadr-model-build procedure for marker genes.
