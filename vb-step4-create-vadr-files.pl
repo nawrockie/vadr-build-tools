@@ -4,7 +4,7 @@ use strict;
 my $usage = "perl vb-step4-create-vadr-files.pl <'auto' or 'all'> <model list> <name of vadr model dir to create> <gene value (use _ for space)> <product value (use _ for space)>\n";
 if(scalar(@ARGV) != 5) { die $usage; }
 
-my $version = "0.02";
+my $version = "0.03";
 
 my $auto_or_all_opt = undef;
 my ($auto_or_all_opt, $model_root_file) = (@ARGV);

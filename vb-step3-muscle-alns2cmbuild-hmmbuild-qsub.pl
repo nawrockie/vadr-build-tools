@@ -4,7 +4,7 @@ use strict;
 my $usage = "perl vb-step3-muscle-alns2cmbuild-hmmbuild-qsub.pl <'auto' or 'all' for defining RF columns> <model list>\n";
 if(scalar(@ARGV) != 2) { die $usage; }
 
-my $version = "0.02";
+my $version = "0.03";
 
 my $auto_or_all_opt = undef;
 my ($auto_or_all_opt, $model_root_file) = (@ARGV);
