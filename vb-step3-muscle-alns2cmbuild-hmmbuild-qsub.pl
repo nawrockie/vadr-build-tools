@@ -104,8 +104,8 @@ for(my $m = 0; $m < $nmdl; $m++) {
   my $hmm_root           = $cm_root;
   my $hmm_file_name      = $hmm_root . ".hmm.tmp";
   my $hmmbuild_file_name = $hmm_root . ".hmmbuild.tmp";
-  my $hmmbuild_O_stk     = $hmm_root . ".hmmbuild.stk";
-  my $hmmbuild_O_afa     = $hmm_root . ".hmmbuild.afa";
+  my $hmmbuild_O_stk     = $hmm_root . ".hmmbuild.aa.stk";
+  my $hmmbuild_O_afa     = $hmm_root . ".hmmbuild.aa.afa";
 
   # create list of 'source' nt accessions
   $cmd = "perl $scripts_dir/parse-by-source.pl $info_file | sort | uniq > $source_list";
@@ -169,7 +169,7 @@ for(my $m = 0; $m < $nmdl; $m++) {
     my $cm_root = $out_root . "." . $mdl . "." . $ere_name_A[$i];
     my $cm_file_name = $cm_root . ".vadr.cm";
     my $cmbuild_file_name = $cm_root . ".vadr.cmbuild";
-    my $cmbuild_cmd = "$infernal_dir/cmbuild --hand -F -n $cm_name --emaxseq 100000 --noss --ere $ere_opt_A[$i] $cm_file_name $nt_stk_file > $cmbuild_file_name";
+    my $cmbuild_cmd = "$infernal_dir/cmbuild --hand -F -n $cm_name --emaxseq 1000 --noss --ere $ere_opt_A[$i] $cm_file_name $nt_stk_file > $cmbuild_file_name";
     printf BUILD ("qsub -N $cm_root -b y -v SGE_FACILITIES -P unified -S /bin/bash -cwd -V -j n -o /dev/null -e $cm_root.err -l m_mem_free=8G,h_rt=2880000,mem_free=8G,h_vmem=8G -m n \"$cmbuild_cmd\"\n");
   }
 

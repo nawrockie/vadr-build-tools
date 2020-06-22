@@ -17,22 +17,21 @@ Then move into the directory that gets created called 'vadr-build-tools'.
 =============================
 SETTING ENVIRONMENT VARIABLES
 =============================
-Before using these scripts you need to be set up to run VADR. Email
-eric.nawrocki@nih.gov for instructions. 
+Before using these scripts you need to be set up to run VADR. 
+The VADR installation script will tell you how to set your environment
+variables. See
+https://github.com/nawrockie/vadr/blob/master/documentation/install.md.
+Email eric.nawrocki@nih.gov with questions/problems.
 
-AND
-
-you need to set two additional environment variables in your .bashrc or
-.chsrc file:
+To run these vadr-build-tools scripts, you'll need to set one
+additional environment variables in your .bashrc or .chsrc file:
 
 If you are using the bash shell, add the following
 lines to the '.bashrc' file in your home directory:
 
 export VADRBUILDTOOLSDIR=<path to current directory (created by git clone command above)>
-export VADRINFERNALDEVDIR=/panfs/pan1/dnaorg/virseqannot/code/vadr-install/infernal/binaries
-export VADRHMMERDIR=~nawrocke/src/hmmer-3.3/src
 
-After adding the export lines to your .bashrc file, source that file
+After adding that export line to your .bashrc file, source that file
 to update your current environment with the command:
 
 source ~/.bashrc
@@ -42,10 +41,8 @@ If you are using the C shell, add the following
 lines to the '.cshrc' file in your home directory:
 
 setenv VADRBUILDTOOLSDIR <path to current directory (created by git clone command above)>
-setenv VADRINFERNALDEVDIR /panfs/pan1/dnaorg/virseqannot/code/vadr-install/infernal/binaries
-setenv VADRHMMERDIR ~nawrocke/src/hmmer-3.3/src
 
-After adding the setenv lines to your .cshrc file, source that file
+After adding that setenv line to your .cshrc file, source that file
 to update your current environment with the command:
 
 source ~/.cshrc
@@ -56,7 +53,7 @@ source ~/.cshrc
 ------------------------------------------------------------
 
 1. Collect set of possibly trustable sequences.
-   cox1: Susan's 7K manually curated dataset
+   cox1: Susan's 9K manually curated dataset
    cytb: RefSeq query (9175 seqs)
          (cytb [ti] OR cytochrome b [ti]) NOT WGS [filter] NOT
          chromosome [ti] NOT supercontig [ti] NOT contig [ti] NOT
