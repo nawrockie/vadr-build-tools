@@ -74,7 +74,8 @@ source ~/.cshrc
 
 3. Create a .tax file which specifies the resolution of taxonomic
    level you want per translation table when creating your VADR
-   models.
+   models. This is probably the most time-consuming step in terms of
+   manual input.
 
    First, look at how many translation tables there were in your
    input:
@@ -94,9 +95,9 @@ source ~/.cshrc
 
    Then for each translation table, look at how many taxonomic groups
    there are at different taxonomic levels (an example of a taxonomic
-   level is 'phyla', which is level 3).
+   level is 'phylum', which is level 3).
 
-   Example, list groups and size of groups for tax level 3 (phyla) for translation table 5
+   Example, list groups and size of groups for tax level 3 (phylum) for translation table 5
 
    $ cat cytb.tt5.info | awk '{ print $4 }' | sort | awk -F\; '{ printf("%s;%s;%s;\n", $1, $2, $3); }' | sort | uniq -c
       5 taxonomy:Eukaryota;Metazoa;Chaetognatha;
@@ -116,47 +117,115 @@ source ~/.cshrc
    Pick the level you want, and then update a file called 'cytb.tax'
    with this information.
 
-   The 'cytb.tax' needs 1 line per translation table, with exactly 3
+   The 'cytb.tax' needs 1 line per translation table, with exactly 4
    tokens, separated by whitespace. Lines that start with "#" are
    comment lines and are ignored.
 
-   The first token is the translation table, the second is the
-   taxonomic level you want for that translation table, and the third
-   token is the prefix you want to put before the taxonomic group
-   name, usually this will be NONE for no prefix, but for vertebrate
-   classes, you may want this to be 'vertebrata-' for example.
+   The first token is the translation table, the second is either a
+   "*" or a taxonomic string (e.g. "Porifera") for which you want the
+   taxonomy level to differ from the rest, more on this below. The
+   third token is the taxonomic level you want for that translation
+   table and taxonomic string or if taxonomic string "*" for all seqs
+   that do NOT match the taxonomic string in other lines that begin
+   wit the same translation table. The fourth token is the prefix you
+   want to put before the taxonomic group name, usually this will be
+   NONE for no prefix, but for vertebrate classes, you may want this
+   to be 've-' for example.
 
    So for tt5 we would add this line:
-   5 3 NONE
+
+   5 * 3 NONE
+
+   For tt4, you may want to specify that for any seq in with Cnidaria
+   or Porifera in its taxonomy, use level 4, and for all other tt4
+   seqs, use level 3. You can specify that with these 3 lines:
+
+   4 *        3 NONE
+   4 Cnidaria 4 cn-
+   4 Porifera 4 po-
 
    A file with the levels I chose for all translation tables for cytb
    is:
    $ cat tax-files/cytb.tax
-   # translation_table taxonomy_level prefix
+   # Each non-#-prefixed line has 4 whitespace delimited tokens (number
+   # of spaces between tokens is irrelevant): 
+   # 
+   # <tt> <string> <tax_level> <prefix>
+   #
+   # <tt>         is translation table this line pertains to
+   #
+   # <string>     if "*" this line pertains to all seqs for <tt> that 
+   #              do not match any other <string> values for lines that begin
+   #              with <tt>
+   #              if not "*", this line pertains to any seq for <tt> that
+   #              match the string <string>      
+   #
+   # <tax_level>: taxonomy level at which to split seqs this line pertains
+   #              to
+   #           
+   # <prefix>:    prefix for naming seqs that pertain to this line, "NONE"
+   #              for none
+   #
+   # 
+   ########################################
+   # For example:
+   ########################################
+   # # tt9: level 3 (platy, hemichordate, echinodermata)
+   # 9 *               3 NONE
+   # 9 Echinodermata   4 ec-
+   # 9 Platyhelminthes 4 pl-
+   ########################################
+   #
+   # The above boxed 4 lines indicate that:
+   # for all seqs that use translation table 9, look for any seq with 
+   # Echinodermata in its tax string, and split these based on the 4th
+   # tax level (e.g. Eukaryota;Metazoa;Echinodermata;Eleutherozoa; and 
+   # Eukaryota;Metazoa;Echinodermata;Pelmatozoa;) and likewise for 
+   # those strings that match Platyhelminthes
+   # (e.g. Eukaryota;Metazoa;Platyhelminthes;Cestoda; and 
+   # Eukaryota;Metazoa;Platyhelminthes;Monogenea;)
+   # And for all other seqs in translation table 9, split on tax level
+   # 3 (e.g. Eukaryota;Metazoa;Hemichordata)
+   #
+   ###################################################
+   #
    # tt2: level 7 (mammalia, etc.) 
-   2 7 vertebrata-
+   2 * 7 vertebrata-
+   #
    # tt5: level 3 (porifera, etc.)
-   5 3 NONE
+   5 * 3 NONE
+   #
    # tt4: level 3 (cnidaria, ctenophora, placozoa, porifera...
-   4 3 NONE
+   4 *        3 NONE
+   4 Cnidaria 4 cn-
+   4 Porifera 4 po-
+   #
    # tt9: level 3 (platy, hemichordate, echinodermata)
-   9 3 NONE
+   9 * 3 NONE
+   #
    # tt1: level 2 (Amoebozoa, Viridplantae)
-   1 2 NONE
+   1 * 2 NONE
+   #
    # tt13: level 4 (tunicata ONLY)
-   13 4 NONE
+   13 * 4 NONE
+   #
    # tt3: level 3 (dikarya ONLY)
-   3 3 NONE
+   3 * 3 NONE
+   #
    # tt22: level 2 (viridiplantae)
-   22 2 NONE
+   22 * 2 NONE
+   #
    # tt11: level 2 (jakobida, nucleariideaandFonticulagroup)
-   11 2 NONE
+   11 * 2 NONE
+   #
    # tt14: level 3 (platyhelminthes ONLY)
-   14 3 NONE
+   14 * 3 NONE
+   #
    # tt33: level 3 (hemichordate ONLY)
-   33 3 NONE
+   33 * 3 NONE
+   #
    # tt24: level 3 (hemichordate ONLY)
-   24 3 NONE
+   24 * 3 NONE
 
 ------------------------------------------------------------
 
