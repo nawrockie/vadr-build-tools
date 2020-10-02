@@ -63,8 +63,7 @@ foreach my $reqd_file (@reqd_files_A) {
 # 9 Echinodermata   4 ec-
 # 9 Platyhelminthes 4 pl-
 # 
-my %taxsplit_level_HH = ();
-my %taxsplit_prefix_HH = ();
+my %taxsplit_prefix_HHH = ();
 open(IN, $taxsplit_file) || die "ERROR unable to open $taxsplit_file for reading";
 while($line = <IN>) { 
   chomp $line;
@@ -72,21 +71,33 @@ while($line = <IN>) {
     my @el_A = split(/\s+/, $line);
     if(scalar(@el_A) != 4) { die "ERROR unable to parse line in $taxsplit_file:\n$line\n"; }
     my ($tt, $string, $level, $prefix) = (@el_A);
-    if(! defined $taxsplit_level_HH{$tt}) { 
-      %{$taxsplit_level_HH{$tt}} = ();
-      %{$taxsplit_prefix_HH{$tt}} = ();
+    if(! defined $taxsplit_prefix_HHH{$tt}) { 
+      %{$taxsplit_prefix_HHH{$tt}} = ();
     }
-    $taxsplit_level_HH{$tt}{$string} = $level;
-    $taxsplit_prefix_HH{$tt}{$string} = $prefix;
+    if(! defined $taxsplit_prefix_HHH{$tt}{$string}) { 
+      %{$taxsplit_prefix_HHH{$tt}{$string}} = ();
+    }
+    $taxsplit_prefix_HHH{$tt}{$string}{$level} = $prefix;
+    #printf("set taxsplit_prefix_HHH{$tt}{$string}{$level} to $prefix\n");
   }
 }
 close(IN);
 #####################################################
 
 #########################################################
-# determine count of seqs
-my $nseq3 = `wc -l $info2_file`;
-chomp $nseq3;
+# populate hash with keys for each accver:<s> string so we can
+# check that all are covered after we split into tax groups
+my %seq_check_H = ();
+open(INFO2, $info2_file) || die "ERROR unable to open $info2_file for reading";
+while(my $line = <INFO2>) { 
+  if($line =~ /^accver\:(\S+)\s+/) { 
+    $seq_check_H{$1} = 1;
+  }
+  else { 
+    die "ERROR unable to parse info2 line in $info2_file: $line";
+  }
+}
+close(INFO2);
 #########################################################
 
 #########################################################
@@ -123,23 +134,31 @@ for($i = 0; $i < $ntt; $i++) {
 
   #########################################################
   # split each tt group by taxonomy
-  if(! exists $taxsplit_level_HH{$tt})       { die "ERROR did not read ANY taxsplit info from $taxsplit_file for translation table $tt"; }
-  if(! exists $taxsplit_prefix_HH{$tt})      { die "ERROR did not read ANY taxsplit info from $taxsplit_file for translation table $tt"; }
-  if(! exists $taxsplit_level_HH{$tt}{"*"})  { die "ERROR did not read taxsplit info line with * as <string> (token 2) from $taxsplit_file for translation table $tt"; }
-  if(! exists $taxsplit_prefix_HH{$tt}{"*"}) { die "ERROR did not read taxsplit info line with * as <string> (token 2) from $taxsplit_file for translation table $tt"; }
-  my $df_level  = $taxsplit_level_HH{$tt}{"*"};
-  my $df_prefix = $taxsplit_prefix_HH{$tt}{"*"};
+  if(! defined $taxsplit_prefix_HHH{$tt})       { die "ERROR did not read ANY taxsplit info from $taxsplit_file for translation table $tt"; }
+  if(! defined $taxsplit_prefix_HHH{$tt}{"*"})  { die "ERROR did not read taxsplit info line with * as <string> (token 2) from $taxsplit_file for translation table $tt"; }
+  if(scalar(keys %{$taxsplit_prefix_HHH{$tt}{"*"}}) != 1) { 
+    foreach my $tmp_key (keys %{$taxsplit_prefix_HHH{$tt}{"*"}}) { 
+      printf("taxsplit_prefix_HHH{$tt}{\*}{$tmp_key} is " . $taxsplit_prefix_HHH{$tt}{"*"}{$tmp_key} . "\n");
+    }
+    die "ERROR read more than one taxsplit info line with * as <string> (token 2) from $taxsplit_file for translation table $tt"; 
+  }
+  my $df_level = undef;
+  foreach my $tmp_key (keys %{$taxsplit_prefix_HHH{$tt}{"*"}}) { 
+    $df_level = $tmp_key;
+  }
+  my $df_prefix = $taxsplit_prefix_HHH{$tt}{"*"}{$df_level};
 
   # check for any other strings
   my $skip_str = "";
-  foreach my $keep_str (sort keys (%{$taxsplit_level_HH{$tt}})) { 
+  foreach my $keep_str (sort keys (%{$taxsplit_prefix_HHH{$tt}})) { 
     if($keep_str ne "*") { 
-      my $level  = $taxsplit_level_HH{$tt}{$keep_str};
-      my $prefix = $taxsplit_prefix_HH{$tt}{$keep_str};
-      $cmd = "perl $scripts_dir/split-by-tax.pl $tt_info_file $keep_str NONE $level $prefix $root.tt$tt >> $model_root_file ";
-      RunCommand($cmd, 1);
-      if($skip_str ne "") { $skip_str .= ","; }
-      $skip_str .= $keep_str;
+      foreach my $level (sort keys (%{$taxsplit_prefix_HHH{$tt}{$keep_str}})) { 
+        my $prefix = $taxsplit_prefix_HHH{$tt}{$keep_str}{$level};
+        $cmd = "perl $scripts_dir/split-by-tax.pl $tt_info_file $keep_str NONE $level $prefix $root.tt$tt >> $model_root_file ";
+        RunCommand($cmd, 1);
+        if($skip_str ne "") { $skip_str .= ","; }
+        $skip_str .= $keep_str;
+      }
     }
   }
   if($skip_str eq "") { $skip_str = "NONE"; }
@@ -166,16 +185,25 @@ my $m;
 my @mdl_aa_fa_file_A = ();
 my @mdl_aa_aln_file_A = ();
 my $muscle_qsub_file = $root . ".muscle.qsub";
-my $nseq4 = 0;
 
 open(MUSCLE, ">", $muscle_qsub_file) || die "ERROR unable to open $muscle_qsub_file for writing";
 for($m = 0; $m < $nmdl; $m++) { 
   my $mdl = $mdl_A[$m];
   my $mdl_info_file = $mdl_info_file_A[$m];
-  # determine how many sequences are in the mdl_info_file
-  my $tmp_nseq = `wc -l $mdl_info_file`;
-  chomp $tmp_nseq;
-  $nseq4 += $tmp_nseq;
+  # open the file and update seq_check_H for each seq read
+  open(MDLINFO, $mdl_info_file) || die "ERROR unable to open $mdl_info_file for reading";
+  while(my $line = <MDLINFO>) { 
+    if($line =~ /^accver\:(\S+)\s+/) { 
+      if(! defined $seq_check_H{$1}) { 
+        die "ERROR read accession version $1 in $mdl_info_file not read in $info2_file";
+      }
+      $seq_check_H{$1}++;
+    }
+    else { 
+      die "ERROR unable to parse mdl info $mdl_info_file line $line";
+    }
+  }
+  close(MDLINFO);
 
   my $mdl_aa_fa_file = $root . "." . $mdl . ".aa.fa"; 
   my $mdl_aa_aln_file = $root . "." . $mdl . ".aa.afa"; 
@@ -191,8 +219,18 @@ for($m = 0; $m < $nmdl; $m++) {
 }
 close(MUSCLE);
 
-if($nseq4 != $nseq3) { 
-  die "ERROR, the $nmdl translation_table/taxonomic_group models only comprise $nseq4 of the $nseq3 files in $info2_file\nYou need to specify additional taxonomic groups in $taxsplit_file";
+# check each seq is in the mdl info files at least once
+my $errmsg = "";
+foreach my $seq_check_name (sort keys %seq_check_H) { 
+  if($seq_check_H{$seq_check_name} == 1) { 
+    $errmsg .= "ERROR: sequence $seq_check_name exists in info2 file but not covered by any taxonomic group modeld\n";
+  }
+  else { 
+    ;#printf("seq_check_H{$seq_check_name}: $seq_check_H{$seq_check_name}\n");
+  }
+}
+if($errmsg ne "") { 
+  die $errmsg;
 }
 printf("\nScript to submit $nmdl muscle jobs to the farm is in:\n$muscle_qsub_file\n");
 printf("\nRun that script, wait for all jobs to finish, then run:\n\$VADRBUILDTOOLSDIR/vb-step3-muscle-alns2cmbuild-hmmbuild-qsub.pl auto $model_root_file\n");

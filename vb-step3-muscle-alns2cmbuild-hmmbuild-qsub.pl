@@ -1,19 +1,23 @@
 #!/usr/bin/env perl
 use strict;
 
-my $usage = "perl vb-step3-muscle-alns2cmbuild-hmmbuild-qsub.pl <'auto' or 'all' for defining RF columns> <model list>\n";
+my $usage = "perl vb-step3-muscle-alns2cmbuild-hmmbuild-qsub.pl <'auto','sf0p0','sf0p1','sf0p2','sf0p3','sf0p4' for defining RF columns with --symfrac> <model list>\n";
 if(scalar(@ARGV) != 2) { die $usage; }
 
 my $version = "0.03";
 
-my $auto_or_all_opt = undef;
-my ($auto_or_all_opt, $model_root_file) = (@ARGV);
+my $symfrac_opt = undef;
+my ($symfrac_opt, $model_root_file) = (@ARGV);
 my $do_auto = 0;
 my $do_all  = 0;
 
-if   ($auto_or_all_opt eq "auto") { $do_auto = 1; }
-elsif($auto_or_all_opt eq "all")  { $do_all  = 1; }
-else { die "ERROR can't parse first commandline arg, should be 'auto' or 'all'"; }
+if   ($symfrac_opt eq "auto")  { $build_symfrac_opt = ""; }
+elsif($symfrac_opt eq "sf0p0") { $build_symfrac_opt = " --symfract 0.0 "; }
+elsif($symfrac_opt eq "sf0p1") { $build_symfrac_opt = " --symfract 0.1 "; }
+elsif($symfrac_opt eq "sf0p2") { $build_symfrac_opt = " --symfract 0.2 "; }
+elsif($symfrac_opt eq "sf0p3") { $build_symfrac_opt = " --symfract 0.3 "; }
+elsif($symfrac_opt eq "sf0p4") { $build_symfrac_opt = " --symfract 0.4 "; }
+else { die "ERROR can't parse first commandline arg, should be one of 'auto','sf0p0','sf0p1','sf0p2','sf0p3','sf0p4' for defining RF columns with --symfrac (0.0 means all columns will be match)\n";
 
 my $root = $model_root_file;
 if($root !~ m/\.model\.list$/) { 
@@ -72,9 +76,7 @@ while(my $line = <IN>) {
   }
 }
 
-my $out_root = $root; 
-if($do_all) { $out_root .= ".all"; }
-else        { $out_root .= ".auto"; }
+my $out_root = $root . "." . $symfract_opt;
 
 my $build_qsub_file  = $out_root . ".build.qsub";
 open(BUILD,  ">", $build_qsub_file)  || die "ERROR unable to open $build_qsub_file for writing";
@@ -190,7 +192,7 @@ for(my $m = 0; $m < $nmdl; $m++) {
 close(BUILD);
 printf("\nScript to submit $nmdl cmbuild and hmmbuild jobs to the farm is in:\n$build_qsub_file\n");
 printf("\nRun that script, wait for all jobs to finish, then run:\n");
-printf("perl \$VADRBUILDTOOLSDIR/vb-step4-create-vadr-files.pl $auto_or_all_opt $model_root_file <name of vadr model dir to create> <gene value (use _ for space) <product value (use _ for space)>\n");
+printf("perl \$VADRBUILDTOOLSDIR/vb-step4-create-vadr-files.pl $symfrac_opt $model_root_file <name of vadr model dir to create> <gene value (use _ for space) <product value (use _ for space)>\n");
 
 
 #################################################################
