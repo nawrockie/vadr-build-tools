@@ -1,30 +1,31 @@
 #!/usr/bin/env perl
 use strict;
 
-my $usage = "perl vb-step4-create-vadr-files.pl <'auto' or 'all'> <model list> <name of vadr model dir to create> <gene value (use _ for space)> <product value (use _ for space)>\n";
+my $usage = "perl vb-step4-create-vadr-files.pl <'auto','sf0p0','sf0p1','sf0p2','sf0p3','sf0p4'> <model list> <name of vadr model dir to create> <gene value (use _ for space)> <product value (use _ for space)>\n";
 if(scalar(@ARGV) != 5) { die $usage; }
 
 my $version = "0.03";
 
-my $auto_or_all_opt = undef;
-my ($auto_or_all_opt, $model_root_file) = (@ARGV);
-my $do_auto = 0;
-my $do_all  = 0;
+my $symfrac_opt = undef;
+my ($symfrac_opt, $model_root_file) = (@ARGV);
 
-my ($auto_or_all_opt, $model_root_file, $vadr_model_dir, $gene, $product) = (@ARGV);
+my ($symfrac_opt, $model_root_file, $vadr_model_dir, $gene, $product) = (@ARGV);
 my $root = $model_root_file;
 if($root !~ m/\.model\.list$/) { 
   die "ERROR unable to parse model list file name $model_root_file"; 
 }
 $root =~ s/\.model\.list$//;
 
-if   ($auto_or_all_opt eq "auto") { $do_auto = 1; }
-elsif($auto_or_all_opt eq "all")  { $do_all  = 1; }
-else { die "ERROR can't parse first commandline arg, should be 'auto' or 'all'"; }
+my $build_symfrac_opt = "";
+if   ($symfrac_opt eq "auto")  { $build_symfrac_opt = ""; }
+elsif($symfrac_opt eq "sf0p0") { $build_symfrac_opt = " --symfrac 0.0 "; }
+elsif($symfrac_opt eq "sf0p1") { $build_symfrac_opt = " --symfrac 0.1 "; }
+elsif($symfrac_opt eq "sf0p2") { $build_symfrac_opt = " --symfrac 0.2 "; }
+elsif($symfrac_opt eq "sf0p3") { $build_symfrac_opt = " --symfrac 0.3 "; }
+elsif($symfrac_opt eq "sf0p4") { $build_symfrac_opt = " --symfrac 0.4 "; }
+else { die "ERROR can't parse first commandline arg, should be one of 'auto','sf0p0','sf0p1','sf0p2','sf0p3','sf0p4' for defining RF columns with --symfrac (0.0 means all columns will be match)\n"; }
 
-my $out_root = $root; 
-if($do_all) { $out_root .= ".all"; }
-else        { $out_root .= ".auto"; }
+my $out_root = $root . "." . $symfrac_opt;
 
 $gene =~ s/\_/ /g;
 $product =~ s/\_/ /g;
@@ -156,6 +157,7 @@ for($m = 0; $m < $nmdl; $m++) {
     chomp $clen;
   }
   print MINFO ("MODEL $root.$mdl group:\"$group\" subgroup:\"$subgroup\" transl_table:\"$tt\" length:\"$clen\" blastdb:\"$blast_db_dst_file\" hmmfile:\"$hmm_file_name\"\n");
+  print MINFO ("FEATURE $root.$mdl type:\"gene\" coords:\"1..$clen\:+\" gene:\"$gene\"\n");
   print MINFO ("FEATURE $root.$mdl type:\"CDS\" coords:\"1..$clen\:+\" gene:\"$gene\" product:\"$product\"\n");
 
   my $cmd = "cp $mdl_aa_fa_file $blast_db_dst_file";
