@@ -8,16 +8,15 @@ my $version = "0.03";
 
 my $symfrac_opt = undef;
 my ($symfrac_opt, $model_root_file) = (@ARGV);
-my $do_auto = 0;
-my $do_all  = 0;
 
+my $build_symfrac_opt = "";
 if   ($symfrac_opt eq "auto")  { $build_symfrac_opt = ""; }
-elsif($symfrac_opt eq "sf0p0") { $build_symfrac_opt = " --symfract 0.0 "; }
-elsif($symfrac_opt eq "sf0p1") { $build_symfrac_opt = " --symfract 0.1 "; }
-elsif($symfrac_opt eq "sf0p2") { $build_symfrac_opt = " --symfract 0.2 "; }
-elsif($symfrac_opt eq "sf0p3") { $build_symfrac_opt = " --symfract 0.3 "; }
-elsif($symfrac_opt eq "sf0p4") { $build_symfrac_opt = " --symfract 0.4 "; }
-else { die "ERROR can't parse first commandline arg, should be one of 'auto','sf0p0','sf0p1','sf0p2','sf0p3','sf0p4' for defining RF columns with --symfrac (0.0 means all columns will be match)\n";
+elsif($symfrac_opt eq "sf0p0") { $build_symfrac_opt = " --symfrac 0.0 "; }
+elsif($symfrac_opt eq "sf0p1") { $build_symfrac_opt = " --symfrac 0.1 "; }
+elsif($symfrac_opt eq "sf0p2") { $build_symfrac_opt = " --symfrac 0.2 "; }
+elsif($symfrac_opt eq "sf0p3") { $build_symfrac_opt = " --symfrac 0.3 "; }
+elsif($symfrac_opt eq "sf0p4") { $build_symfrac_opt = " --symfrac 0.4 "; }
+else { die "ERROR can't parse first commandline arg, should be one of 'auto','sf0p0','sf0p1','sf0p2','sf0p3','sf0p4' for defining RF columns with --symfrac (0.0 means all columns will be match)\n"; }
 
 my $root = $model_root_file;
 if($root !~ m/\.model\.list$/) { 
@@ -76,7 +75,7 @@ while(my $line = <IN>) {
   }
 }
 
-my $out_root = $root . "." . $symfract_opt;
+my $out_root = $root . "." . $symfrac_opt;
 
 my $build_qsub_file  = $out_root . ".build.qsub";
 open(BUILD,  ">", $build_qsub_file)  || die "ERROR unable to open $build_qsub_file for writing";
@@ -127,8 +126,7 @@ for(my $m = 0; $m < $nmdl; $m++) {
 
   # build an HMM, saving the RF annotated output alignment
   my $hmm_name = $root . "." . $mdl;
-  my $symfrac_opt = ($do_all) ? " --symfrac 0.0 " : "";
-  $cmd = "$hmmer_dir/hmmbuild $symfrac_opt -O $hmmbuild_O_stk -n $hmm_name $hmm_file_name $aa_aln_file > $hmmbuild_file_name";
+  $cmd = "$hmmer_dir/hmmbuild $build_symfrac_opt -O $hmmbuild_O_stk -n $hmm_name $hmm_file_name $aa_aln_file > $hmmbuild_file_name";
   RunCommand($cmd, 1);
 
   # covert the hmmbuild RF line to a mask file for the nt alignment
