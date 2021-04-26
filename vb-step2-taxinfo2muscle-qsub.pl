@@ -215,7 +215,7 @@ for($m = 0; $m < $nmdl; $m++) {
   $cmd = "cat $mdl_info_file | awk '{ print \$1 }' | sed 's/accver://' | sort | uniq | $easel_dir/esl-sfetch -f $short_fa_file - > $mdl_aa_fa_file";
   RunCommand($cmd, 1);
 
-  print MUSCLE ("qsub -N $mdl -b y -v SGE_FACILITIES -P unified -S /bin/bash -cwd -V -j n -o /dev/null -e $mdl.muscle.err -l m_mem_free=8G,h_rt=2880000,mem_free=8G,h_vmem=8G -m n \"/usr/local/muscle/3.7/bin/muscle -maxmb 4096 -in $mdl_aa_fa_file -out $mdl_aa_aln_file > $mdl_muscle_file\"\n");
+  print MUSCLE ("qsub -N $mdl -b y -v SGE_FACILITIES -P unified -S /bin/bash -cwd -V -j n -o /dev/null -e $mdl.muscle.err -l m_mem_free=16G,h_rt=2880000,mem_free=16G,h_vmem=16G -m n \"/usr/local/muscle/3.7/bin/muscle -maxmb 16000 -in $mdl_aa_fa_file -out $mdl_aa_aln_file > $mdl_muscle_file\"\n");
 }
 close(MUSCLE);
 
@@ -233,7 +233,7 @@ if($errmsg ne "") {
   die $errmsg;
 }
 printf("\nScript to submit $nmdl muscle jobs to the farm is in:\n$muscle_qsub_file\n");
-printf("\nRun that script, wait for all jobs to finish, then run:\n\$VADRBUILDTOOLSDIR/vb-step3-muscle-alns2cmbuild-hmmbuild-qsub.pl auto $model_root_file\n");
+printf("\nRun that script, wait for all jobs to finish, then run:\n\$VADRBUILDTOOLSDIR/vb-step3-muscle-alns2cmbuild-hmmbuild-qsub.pl <s> $model_root_file\nwhere <s> is one of: 'auto', 'sf0p0', 'sf0p1', 'sf0p2', 'sf0p3' or 'sf0p4'\n");
   
 #########################################################
 
